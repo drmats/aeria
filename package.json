@@ -1,0 +1,43 @@
+{
+    "bugs": {
+        "url": "https://github.com/drmats/aeria/issues"
+    },
+    "contributors": [
+        {
+            "name": "drmats",
+            "email": "xcmats@protonmail.com",
+            "url": "https://twitter.com/xcmats/"
+        }
+    ],
+    "dependencies": {
+        "@xcmats/js-toolbox": "^0.8.2"
+    },
+    "description": "Flightlog.",
+    "devDependencies": {
+        "eslint": "^6.1.0",
+        "rimraf": "^2.6.3"
+    },
+    "files": [
+        "src"
+    ],
+    "homepage": "https://github.com/drmats/aeria",
+    "keywords": [
+        "flightlog",
+        "igc"
+    ],
+    "license": "Apache-2.0",
+    "name": "@xcmats/aeria",
+    "private": true,
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/drmats/aeria.git"
+    },
+    "scripts": {
+        "clean:modules": "rimraf package-lock.json && rimraf node_modules",
+        "test": "necho \"Warning: no tests specified (yet)\""
+    },
+    "version": "0.0.1"
+}
