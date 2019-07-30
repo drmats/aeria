@@ -17,7 +17,6 @@
     "devDependencies": {
         "@babel/cli": "^7.5.5",
         "@babel/core": "^7.5.5",
-        "@babel/node": "^7.5.5",
         "@babel/plugin-proposal-class-properties": "^7.5.5",
         "@babel/plugin-proposal-object-rest-spread": "^7.5.5",
         "@babel/plugin-syntax-dynamic-import": "^7.2.0",
@@ -44,6 +43,7 @@
         "eslint": "^5.16.0",
         "eslint-loader": "2.1.2",
         "eslint-plugin-import": "2.17.3",
+        "nodemon": "^1.19.1",
         "rimraf": "^2.6.3",
         "webpack": "^4.32.2",
         "webpack-cli": "^3.3.2",
@@ -69,6 +69,7 @@
     },
     "scripts": {
         "build": "cross-env BABEL_ENV=production webpack -p --config=webpack.config.js",
+        "contBuild": "nodemon -e js --watch ./src/ --exec \"npm run build\"",
         "clean": "rimraf ./dist",
         "clean:modules": "rimraf package-lock.json && rimraf node_modules",
         "start": "node ./dist/aeria.js",
