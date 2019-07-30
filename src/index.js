@@ -14,8 +14,8 @@ import {
     async,
     func,
     type,
-    string,
 } from "@xcmats/js-toolbox"
+import { DateTime } from "luxon"
 import { promises as fsPromises } from "fs"
 import {
     name as applicationName,
@@ -32,10 +32,52 @@ let
 
 
     // ...
+    map = func.rearg(async.map)(1, 0),
+
+
+    // ...
     classify = (line) =>
         type.toBool(line.match(/^HFDTE.*/)) ? "date" :
             type.toBool(line.match(/^B.*/)) ? "position" :
                 "other",
+
+
+    // ...
+    parseDate = (acc, line) => {
+        // old date format
+        let lm = line.match(
+            /^HFDTE([0-9]{2})([0-9]{2})([0-9]{2})$/
+        )
+        if (!type.isArray(lm)) {
+            // new date format
+            lm = line.match(
+                /^HFDTEDATE:([0-9]{2})([0-9]{2})([0-9]{2}),.*$/
+            )
+        }
+
+        try {
+            acc.day = {
+                d: parseInt(lm[1], 10),
+                m: parseInt(lm[2], 10),
+                y: parseInt(`20${lm[3]}`, 10),
+            }
+        } catch {
+            acc.date = "unknown"
+        }
+
+        return acc
+    },
+
+
+    // ...
+    parsePoint = (acc, line) => {
+        acc.points += 1
+        if (acc.first === null) {
+            acc.first = line
+        }
+        acc.last = line
+        return acc
+    },
 
 
     // ...
@@ -48,18 +90,14 @@ let
                     .reduce(
                         (acc, line) =>
                             func.choose(classify(line), {
-                                date: () => {
-                                    acc.date = line
-                                    return acc
-                                },
-                                position: () => {
-                                    acc.seconds += 1
-                                    return acc
-                                },
-                            }, () => acc),
+                                date: parseDate,
+                                position: parsePoint,
+                            }, () => acc, [acc, line]),
                         {
-                            date: string.empty(),
-                            seconds: 0,
+                            day: null,
+                            points: 0,
+                            first: null,
+                            last: null,
                         }
                     )
             ),
@@ -82,8 +120,17 @@ let
                         .map(file => file.name),
                 entries => { let s = entries.slice().sort(); return s }
             ))
-            .then(func.rearg(async.map)(1, 0)(parseIgc))
-            .then(print)
+            .then(map(parseIgc))
+            .then(map(o => ({
+                lux: DateTime.fromObject({
+                    year: o.day.y,
+                    month: o.day.m,
+                    day: o.day.d,
+
+                }).toISODate(),
+                ...o,
+            })))
+            .then(map(print))
 
     }
 
