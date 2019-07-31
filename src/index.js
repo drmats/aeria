@@ -13,14 +13,14 @@
 import {
     async,
     func,
+    struct,
     type,
 } from "@xcmats/js-toolbox"
-import { DateTime } from "luxon"
-import { promises as fsPromises } from "fs"
 import {
-    name as applicationName,
-    version,
-} from "../package.json"
+    DateTime,
+    Duration,
+} from "luxon"
+import { promises as fsPromises } from "fs"
 
 
 
@@ -31,8 +31,22 @@ let
     print = console.info,
 
 
+
+
     // ...
     map = func.rearg(async.map)(1, 0),
+
+
+
+
+    // ...
+    secondsToHours = (seconds) =>
+        Duration
+            .fromObject({ seconds })
+            .shiftTo("hours", "minutes")
+            .toFormat("hh:mm"),
+
+
 
 
     // ...
@@ -40,6 +54,8 @@ let
         type.toBool(line.match(/^HFDTE.*/)) ? "date" :
             type.toBool(line.match(/^B.*/)) ? "position" :
                 "other",
+
+
 
 
     // ...
@@ -61,6 +77,8 @@ let
             year: parseInt(`20${lm[3]}`, 10),
         })
     },
+
+
 
 
     // ...
@@ -104,6 +122,8 @@ let
     },
 
 
+
+
     // ...
     parseIgc = (filename) =>
         fsPromises
@@ -119,7 +139,6 @@ let
                                     return acc
                                 },
                                 position: () => {
-                                    acc.points += 1
                                     if (acc.first === null) {
                                         acc.first = line
                                     }
@@ -129,7 +148,6 @@ let
                             }, () => acc),
                         {
                             date: null,
-                            points: 0,
                             first: null,
                             last: null,
                         }
@@ -137,35 +155,50 @@ let
             ),
 
 
+
+
     // ...
-    main = () => {
+    main = async () => {
+        let
+            stats = await fsPromises
+                .readdir(".", { withFileTypes: true })
+                .then(func.flow(
+                    entries =>
+                        entries
+                            .filter(entry => entry.isFile())
+                            .filter(file => type.toBool(
+                                file.name.toLowerCase().match(/\.igc$/)
+                            ))
+                            .map(file => file.name),
+                    entries => { let s = entries.slice().sort(); return s }
+                ))
+                .then(map(parseIgc))
+                .then(map(o => ({
+                    date: o.date,
+                    duration:
+                        parsePoint(o.last).time.diff(
+                            parsePoint(o.first).time, "seconds"
+                        ).seconds,
+                }))),
 
-        print(`${applicationName} v.${version}`)
+            yearStats = stats.reduce((acc, flight) => {
+                let bucket = String(flight.date.year)
+                if (acc[bucket]) { acc[bucket] += flight.duration }
+                else { acc[bucket] = flight.duration }
+                return acc
+            }, {})
 
-        fsPromises
-            .readdir(".", { withFileTypes: true })
-            .then(func.flow(
-                entries =>
-                    entries
-                        .filter(entry => entry.isFile())
-                        .filter(file => type.toBool(
-                            file.name.toLowerCase().match(/\.igc$/)
-                        ))
-                        .map(file => file.name),
-                entries => { let s = entries.slice().sort(); return s }
-            ))
-            .then(map(parseIgc))
-            .then(map(o => {
-                let
-                    f = parsePoint(o.first),
-                    l = parsePoint(o.last)
 
-                return {
-                    date: o.date.toISODate(),
-                    duration: l.time.diff(f.time, "seconds").seconds,
-                }
-            }))
-            .then(map(print))
+        print(struct.objectMap(
+            yearStats, ([k, v]) => [k, secondsToHours(v)]
+        ))
+
+        print({
+            "TOTAL: ":
+            secondsToHours(struct.objectReduce(
+                yearStats, (acc, [_, v]) => acc + v, 0
+            )),
+        })
 
     }
 
