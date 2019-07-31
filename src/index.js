@@ -194,7 +194,7 @@ let
         ))
 
         print({
-            "TOTAL: ":
+            "TOTAL":
             secondsToHours(struct.objectReduce(
                 yearStats, (acc, [_, v]) => acc + v, 0
             )),
