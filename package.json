@@ -74,6 +74,7 @@
         "contBuild": "nodemon -e js --watch ./src/ --exec \"npm run build\"",
         "clean": "rimraf ./dist",
         "clean:modules": "rimraf package-lock.json && rimraf node_modules",
+        "lint": "eslint ./src/",
         "start": "node ./dist/aeria.js",
         "test": "echo \"Warning: no tests specified (yet)\""
     },
