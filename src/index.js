@@ -192,14 +192,12 @@ let
         print(struct.objectMap(
             yearStats, ([k, v]) => [k, secondsToHours(v)]
         ))
-
         print({
             "TOTAL":
             secondsToHours(struct.objectReduce(
                 yearStats, (acc, [_, v]) => acc + v, 0
             )),
         })
-
     }
 
 
