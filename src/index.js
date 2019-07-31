@@ -55,15 +55,11 @@ let
             )
         }
 
-        try {
-            return DateTime.fromObject({
-                day: parseInt(lm[1], 10),
-                month: parseInt(lm[2], 10),
-                year: parseInt(`20${lm[3]}`, 10),
-            })
-        } catch {
-            return null
-        }
+        return DateTime.fromObject({
+            day: parseInt(lm[1], 10),
+            month: parseInt(lm[2], 10),
+            year: parseInt(`20${lm[3]}`, 10),
+        })
     },
 
 
@@ -83,31 +79,27 @@ let
                 "([0-9]{5})"                 // alt
             ))
 
-        try {
-            return {
-                time: DateTime.fromObject({
-                    hour: parseInt(lm[1], 10),
-                    minute: parseInt(lm[2], 10),
-                    second: parseInt(lm[3], 10),
-                }),
-                lat: {
-                    d: parseInt(lm[4], 10),
-                    m: parseInt(lm[5], 10),
-                    s: parseInt(lm[6], 10),
-                    o: lm[7],
-                },
-                lon: {
-                    d: parseInt(lm[8], 10),
-                    m: parseInt(lm[9], 10),
-                    s: parseInt(lm[10], 10),
-                    o: lm[11],
-                },
-                fix: lm[12],
-                palt: parseInt(lm[13], 10),
-                alt: parseInt(lm[14], 10),
-            }
-        } catch {
-            return null
+        return {
+            time: DateTime.fromObject({
+                hour: parseInt(lm[1], 10),
+                minute: parseInt(lm[2], 10),
+                second: parseInt(lm[3], 10),
+            }),
+            lat: {
+                d: parseInt(lm[4], 10),
+                m: parseInt(lm[5], 10),
+                s: parseInt(lm[6], 10),
+                o: lm[7],
+            },
+            lon: {
+                d: parseInt(lm[8], 10),
+                m: parseInt(lm[9], 10),
+                s: parseInt(lm[10], 10),
+                o: lm[11],
+            },
+            fix: lm[12],
+            palt: parseInt(lm[13], 10),
+            alt: parseInt(lm[14], 10),
         }
     },
 
