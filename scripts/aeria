@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# (c) 2019, drmats
+# Licensed under the Apache License, Version 2.0
+
+
+
+
+if [ -L $0 ]
+then dir=$(dirname `readlink $0`)
+else dir="."
+fi
+
+node --no-warnings $dir/../dist/aeria.js
