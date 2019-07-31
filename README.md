@@ -9,7 +9,8 @@ Flightlog.
 
 ## notes
 
-Simple air time statistics generator.
+[IGC](http://www.ukiws.demon.co.uk/GFAC/documents/tech_spec_gnss.pdf)-based,
+simple air time statistics generator.
 
 </br>
 

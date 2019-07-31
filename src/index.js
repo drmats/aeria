@@ -83,7 +83,7 @@ let
 
     // ...
     parsePoint = (line) => {
-        // BHH MM SS DDMMmmm [NS] DDDMMmmm [EW] [AV] PPPPP GGGGG
+        // B HH MM SS DDMMmmm [NS] DDDMMmmm [EW] [AV] PPPPP GGGGG
         let
             dd = "([0-9]{2})",
             ddd = "([0-9]{3})",
