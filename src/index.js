@@ -43,7 +43,7 @@ let
 
 
     // ...
-    parseDate = (acc, line) => {
+    parseDate = (line) => {
         // old date format
         let lm = line.match(
             /^HFDTE([0-9]{2})([0-9]{2})([0-9]{2})$/
@@ -56,27 +56,59 @@ let
         }
 
         try {
-            acc.day = {
-                d: parseInt(lm[1], 10),
-                m: parseInt(lm[2], 10),
-                y: parseInt(`20${lm[3]}`, 10),
-            }
+            return DateTime.fromObject({
+                day: parseInt(lm[1], 10),
+                month: parseInt(lm[2], 10),
+                year: parseInt(`20${lm[3]}`, 10),
+            })
         } catch {
-            acc.date = "unknown"
+            return null
         }
-
-        return acc
     },
 
 
     // ...
-    parsePoint = (acc, line) => {
-        acc.points += 1
-        if (acc.first === null) {
-            acc.first = line
+    parsePoint = (line) => {
+        // BHH MM SS DDMMmmm [NS] DDDMMmmm [EW] [AV] PPPPP GGGGG
+        let
+            dd = "([0-9]{2})",
+            ddd = "([0-9]{3})",
+            lm = line.match(new RegExp(
+                "^B" +                       // type
+                `${dd}${dd}${dd}` +          // time
+                `${dd}${dd}${ddd}([NS])` +   // lat
+                `${ddd}${dd}${ddd}([EW])` +  // lon
+                "([AV])" +                   // fix
+                "([0-9]{5}|-[0-9]{4})" +     // pressure alt
+                "([0-9]{5})"                 // alt
+            ))
+
+        try {
+            return {
+                time: DateTime.fromObject({
+                    hour: parseInt(lm[1], 10),
+                    minute: parseInt(lm[2], 10),
+                    second: parseInt(lm[3], 10),
+                }),
+                lat: {
+                    d: parseInt(lm[4], 10),
+                    m: parseInt(lm[5], 10),
+                    s: parseInt(lm[6], 10),
+                    o: lm[7],
+                },
+                lon: {
+                    d: parseInt(lm[8], 10),
+                    m: parseInt(lm[9], 10),
+                    s: parseInt(lm[10], 10),
+                    o: lm[11],
+                },
+                fix: lm[12],
+                palt: parseInt(lm[13], 10),
+                alt: parseInt(lm[14], 10),
+            }
+        } catch {
+            return null
         }
-        acc.last = line
-        return acc
     },
 
 
@@ -90,11 +122,21 @@ let
                     .reduce(
                         (acc, line) =>
                             func.choose(classify(line), {
-                                date: parseDate,
-                                position: parsePoint,
-                            }, () => acc, [acc, line]),
+                                date: () => {
+                                    acc.date = parseDate(line)
+                                    return acc
+                                },
+                                position: () => {
+                                    acc.points += 1
+                                    if (acc.first === null) {
+                                        acc.first = line
+                                    }
+                                    acc.last = line
+                                    return acc
+                                },
+                            }, () => acc),
                         {
-                            day: null,
+                            date: null,
                             points: 0,
                             first: null,
                             last: null,
@@ -121,15 +163,16 @@ let
                 entries => { let s = entries.slice().sort(); return s }
             ))
             .then(map(parseIgc))
-            .then(map(o => ({
-                lux: DateTime.fromObject({
-                    year: o.day.y,
-                    month: o.day.m,
-                    day: o.day.d,
+            .then(map(o => {
+                let
+                    f = parsePoint(o.first),
+                    l = parsePoint(o.last)
 
-                }).toISODate(),
-                ...o,
-            })))
+                return {
+                    date: o.date.toISODate(),
+                    duration: l.time.diff(f.time, "seconds").seconds,
+                }
+            }))
             .then(map(print))
 
     }
