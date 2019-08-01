@@ -221,23 +221,41 @@ let
                         string.padLeft(String(flight.date.month), 2, "0"),
                     ].join("-"),
                 }, () => String(flight.date.year))
-                if (acc[bucket]) { acc[bucket] += flight.duration }
-                else { acc[bucket] = flight.duration }
+                if (acc[bucket]) {
+                    acc[bucket].duration += flight.duration
+                    acc[bucket].flights += 1
+                } else {
+                    acc[bucket] = {
+                        duration: flight.duration,
+                        flights: 1,
+                    }
+                }
                 return acc
             }, {}),
 
             // output
             output = options.raw ? computedStats : struct.objectMap(
-                computedStats, ([k, v]) => [k, secondsToHours(v)]
+                computedStats, ([k, { duration, ...rest }]) => [k, {
+                    duration: secondsToHours(duration),
+                    ...rest,
+                }]
             )
 
 
         if (options.total) {
-            output["TOTAL"] = func.flow(
-                options.raw ? func.identity : secondsToHours
-            )(struct.objectReduce(
-                computedStats, (acc, [_, v]) => acc + v, 0
-            ))
+            output["TOTAL"] = struct.objectReduce(
+                computedStats,
+                (acc, [_, v]) => ({
+                    duration: acc.duration + v.duration,
+                    flights: acc.flights + v.flights,
+                }),
+                { duration: 0, flights: 0 }
+            )
+            if (!options.raw) {
+                output["TOTAL"].duration = secondsToHours(
+                    output["TOTAL"].duration
+                )
+            }
         }
 
         print(output)
