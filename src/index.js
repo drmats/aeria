@@ -35,13 +35,14 @@ let
 
 
 
-    // ...
+    // async.map argument rearranged and curried (helper)
     map = func.rearg(async.map)(1, 0),
 
 
 
 
-    // ...
+    // convert duration represented as seconds
+    // into duration represented as "hh:mm" string
     secondsToHours = (seconds) =>
         Duration
             .fromObject({ seconds })
@@ -51,7 +52,7 @@ let
 
 
 
-    // ...
+    // classify IGC line type
     classify = (line) =>
         type.toBool(line.match(/^HFDTE.*/)) ? "date" :
             type.toBool(line.match(/^B.*/)) ? "position" :
@@ -60,7 +61,7 @@ let
 
 
 
-    // ...
+    // parse IGC "HFDTE" record into Luxon's DateTime object
     parseDate = (line) => {
         // old date format
         let lm = line.match(
@@ -83,7 +84,7 @@ let
 
 
 
-    // ...
+    // parse IGC "B" record
     parsePoint = (line) => {
         // B HH MM SS DDMMmmm [NS] DDDMMmmm [EW] [AV] PPPPP GGGGG
         let
@@ -126,7 +127,8 @@ let
 
 
 
-    // ...
+    // open IGC file, read its contents, split to lines,
+    // parse interesting ones, produce simple statistic
     parseIgc = (filename) =>
         fsPromises
             .readFile(filename, "utf8")
@@ -161,7 +163,6 @@ let
 
     // ...
     main = async () => {
-
         // program options
         const options = getopts(process.argv.slice(2), {
             alias: {
@@ -180,13 +181,17 @@ let
             },
         })
 
+
+        // print help if desired
         if (options.help) {
             print("usage: aeria [-s|--span=y|m|d] [-r|--raw] [--no-total]")
             process.exit(0)
         }
 
+
         let
             // create per-file statistics
+            // from all IGC files in current directory
             stats = await fsPromises
                 .readdir(".", { withFileTypes: true })
                 .then(func.flow(
@@ -208,7 +213,7 @@ let
                         ).seconds,
                 }))),
 
-            // compute aggregated statistics
+            // compute aggregated statistics based on per-file statistics
             aggregated = stats.reduce((acc, flight) => {
                 let bucket = func.choose(options.span, {
                     d: () => [
