@@ -129,33 +129,29 @@ let
 
     // open IGC file, read its contents, split to lines,
     // parse interesting ones, produce simple statistic
-    parseIgc = (filename) =>
-        fsPromises
-            .readFile(filename, "utf8")
-            .then(contents =>
-                contents
-                    .split("\r\n")
-                    .reduce(
-                        (acc, line) =>
-                            func.choose(classify(line), {
-                                date: () => {
-                                    acc.date = parseDate(line)
-                                    return acc
-                                },
-                                position: () => {
-                                    if (acc.first === null) {
-                                        acc.first = line
-                                    }
-                                    acc.last = line
-                                    return acc
-                                },
-                            }, () => acc),
-                        {
-                            date: null,
-                            first: null,
-                            last: null,
-                        }
-                    )
+    parseIgc = async (filename) =>
+        (await fsPromises.readFile(filename, "utf8"))
+            .split("\r\n")
+            .reduce(
+                (acc, line) =>
+                    func.choose(classify(line), {
+                        date: () => {
+                            acc.date = parseDate(line)
+                            return acc
+                        },
+                        position: () => {
+                            if (acc.first === null) {
+                                acc.first = line
+                            }
+                            acc.last = line
+                            return acc
+                        },
+                    }, () => acc),
+                {
+                    date: null,
+                    first: null,
+                    last: null,
+                }
             ),
 
 
