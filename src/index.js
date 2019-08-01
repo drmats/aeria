@@ -10,9 +10,11 @@
 
 
 
+import getopts from "getopts"
 import {
     async,
     func,
+    string,
     struct,
     type,
 } from "@xcmats/js-toolbox"
@@ -159,7 +161,32 @@ let
 
     // ...
     main = async () => {
+
+        // program options
+        const options = getopts(process.argv.slice(2), {
+            alias: {
+                help: "h",
+                raw: "r",
+                span: "s",
+                total: "t",
+            },
+            boolean: ["h", "r", "t"],
+            string: ["span"],
+            default: {
+                help: false,
+                span: "y",
+                raw: false,
+                total: true,
+            },
+        })
+
+        if (options.help) {
+            print("usage: aeria [-s|--span=y|m|d] [-r|--raw] [--no-total]")
+            process.exit(0)
+        }
+
         let
+            // per-file statistics
             stats = await fsPromises
                 .readdir(".", { withFileTypes: true })
                 .then(func.flow(
@@ -181,20 +208,38 @@ let
                         ).seconds,
                 }))),
 
-            yearStats = stats.reduce((acc, flight) => {
-                let bucket = String(flight.date.year)
+            // computed statistics
+            computedStats = stats.reduce((acc, flight) => {
+                let bucket = func.choose(options.span, {
+                    d: () => [
+                        String(flight.date.year),
+                        string.padLeft(String(flight.date.month), 2, "0"),
+                        string.padLeft(String(flight.date.day), 2, "0"),
+                    ].join("-"),
+                    m: () => [
+                        String(flight.date.year),
+                        string.padLeft(String(flight.date.month), 2, "0"),
+                    ].join("-"),
+                }, () => String(flight.date.year))
                 if (acc[bucket]) { acc[bucket] += flight.duration }
                 else { acc[bucket] = flight.duration }
                 return acc
             }, {}),
 
-            output = struct.objectMap(
-                yearStats, ([k, v]) => [k, secondsToHours(v)]
+            // output
+            output = options.raw ? computedStats : struct.objectMap(
+                computedStats, ([k, v]) => [k, secondsToHours(v)]
             )
 
-        output["TOTAL"] = secondsToHours(struct.objectReduce(
-            yearStats, (acc, [_, v]) => acc + v, 0
-        ))
+
+        if (options.total) {
+            output["TOTAL"] = func.flow(
+                options.raw ? func.identity : secondsToHours
+            )(struct.objectReduce(
+                computedStats, (acc, [_, v]) => acc + v, 0
+            ))
+        }
+
         print(output)
     }
 

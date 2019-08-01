@@ -12,6 +12,7 @@
     "dependencies": {
         "@babel/runtime": "^7.5.5",
         "@xcmats/js-toolbox": "^0.8.2",
+        "getopts": "^2.2.5",
         "luxon": "^1.17.2"
     },
     "description": "Flightlog.",

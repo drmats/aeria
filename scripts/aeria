@@ -11,4 +11,4 @@ then dir=$(dirname `readlink $0`)
 else dir="."
 fi
 
-node --no-warnings $dir/../dist/aeria.js
+node --no-warnings $dir/../dist/aeria.js "$@"
