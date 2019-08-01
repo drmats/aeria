@@ -8,7 +8,7 @@
 
 if [ -L $0 ]
 then dir=$(dirname `readlink $0`)
-else dir="."
+else dir=$(dirname $0)
 fi
 
 node --no-warnings $dir/../dist/aeria.js "$@"
