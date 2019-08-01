@@ -186,18 +186,16 @@ let
                 if (acc[bucket]) { acc[bucket] += flight.duration }
                 else { acc[bucket] = flight.duration }
                 return acc
-            }, {})
+            }, {}),
 
+            output = struct.objectMap(
+                yearStats, ([k, v]) => [k, secondsToHours(v)]
+            )
 
-        print(struct.objectMap(
-            yearStats, ([k, v]) => [k, secondsToHours(v)]
+        output["TOTAL"] = secondsToHours(struct.objectReduce(
+            yearStats, (acc, [_, v]) => acc + v, 0
         ))
-        print({
-            "TOTAL":
-            secondsToHours(struct.objectReduce(
-                yearStats, (acc, [_, v]) => acc + v, 0
-            )),
-        })
+        print(output)
     }
 
 
