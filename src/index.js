@@ -22,7 +22,7 @@ import {
     DateTime,
     Duration,
 } from "luxon"
-import { promises as fsPromises } from "fs"
+import { promises as fsp } from "fs"
 
 
 
@@ -130,7 +130,7 @@ let
     // open IGC file, read its contents, split to lines,
     // parse interesting ones, produce simple summary
     parseIgc = async (filename) =>
-        (await fsPromises.readFile(filename, "utf8"))
+        (await fsp.readFile(filename, "utf8"))
             .split("\r\n")
             .reduce(
                 (acc, line) =>
@@ -188,7 +188,7 @@ let
         let
             // create per-file summaries
             // from all IGC files in current directory
-            stats = await fsPromises
+            stats = await fsp
                 .readdir(".", { withFileTypes: true })
                 .then(func.flow(
                     entries =>
