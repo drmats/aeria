@@ -186,7 +186,7 @@ let
         }
 
         let
-            // per-file statistics
+            // create per-file statistics
             stats = await fsPromises
                 .readdir(".", { withFileTypes: true })
                 .then(func.flow(
@@ -208,8 +208,8 @@ let
                         ).seconds,
                 }))),
 
-            // computed statistics
-            computedStats = stats.reduce((acc, flight) => {
+            // compute aggregated statistics
+            aggregated = stats.reduce((acc, flight) => {
                 let bucket = func.choose(options.span, {
                     d: () => [
                         String(flight.date.year),
@@ -231,34 +231,40 @@ let
                     }
                 }
                 return acc
-            }, {}),
-
-            // output
-            output = options.raw ? computedStats : struct.objectMap(
-                computedStats, ([k, { duration, ...rest }]) => [k, {
-                    duration: secondsToHours(duration),
-                    ...rest,
-                }]
-            )
+            }, {})
 
 
+        // compute average flight time
+        aggregated = struct.objectMap(
+            aggregated, ([k, { duration, flights, ...rest }]) => [k, {
+                duration, flights, ...rest,
+                average: Math.floor(duration / flights),
+            }]
+        )
+
+        // compute totals
         if (options.total) {
-            output["TOTAL"] = struct.objectReduce(
-                computedStats,
+            aggregated["TOTAL"] = struct.objectReduce(
+                aggregated,
                 (acc, [_, v]) => ({
                     duration: acc.duration + v.duration,
                     flights: acc.flights + v.flights,
                 }),
                 { duration: 0, flights: 0 }
             )
-            if (!options.raw) {
-                output["TOTAL"].duration = secondsToHours(
-                    output["TOTAL"].duration
-                )
-            }
+            aggregated["TOTAL"].average = Math.floor(
+                aggregated["TOTAL"].duration / aggregated["TOTAL"].flights
+            )
         }
 
-        print(output)
+        // print raw or human-readable times
+        print(options.raw ? aggregated : struct.objectMap(
+            aggregated, ([k, { average, duration, ...rest }]) => [k, {
+                duration: secondsToHours(duration),
+                ...rest,
+                average: secondsToHours(average),
+            }]
+        ))
     }
 
 
