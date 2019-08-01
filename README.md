@@ -10,10 +10,26 @@ simple air time statistics generator.
 
 ## usage
 
-```
-$ aeria --help
-usage: aeria [-s|--span=y|m|d] [-r|--raw] [--no-total]
-```
+* install dependencies
+    ```bash
+    $ npm i
+    ```
+
+* build
+    ```bash
+    $ npm run build
+    ```
+
+* run in folder containing IGC files
+    ```bash
+    $ aeria
+    ```
+
+* available options
+    ```bash
+    $ aeria --help
+    usage: aeria [-s|--span=y|m|d] [-r|--raw] [--no-total]
+    ```
 
 </br>
 

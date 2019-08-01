@@ -128,7 +128,7 @@ let
 
 
     // open IGC file, read its contents, split to lines,
-    // parse interesting ones, produce simple statistic
+    // parse interesting ones, produce simple summary
     parseIgc = async (filename) =>
         (await fsPromises.readFile(filename, "utf8"))
             .split("\r\n")
@@ -171,7 +171,7 @@ let
             string: ["span"],
             default: {
                 help: false,
-                span: "y",
+                span: "y",   // y - year, m - month, d - day
                 raw: false,
                 total: true,
             },
@@ -186,7 +186,7 @@ let
 
 
         let
-            // create per-file statistics
+            // create per-file summaries
             // from all IGC files in current directory
             stats = await fsPromises
                 .readdir(".", { withFileTypes: true })
@@ -209,19 +209,25 @@ let
                         ).seconds,
                 }))),
 
-            // compute aggregated statistics based on per-file statistics
+            // compute aggregated statistics based on per-file summaries
             aggregated = stats.reduce((acc, flight) => {
-                let bucket = func.choose(options.span, {
-                    d: () => [
-                        String(flight.date.year),
-                        string.padLeft(String(flight.date.month), 2, "0"),
-                        string.padLeft(String(flight.date.day), 2, "0"),
-                    ].join("-"),
-                    m: () => [
-                        String(flight.date.year),
-                        string.padLeft(String(flight.date.month), 2, "0"),
-                    ].join("-"),
-                }, () => String(flight.date.year))
+                let bucket = func.choose(
+                    options.span, {
+                        // aggregate by day
+                        d: () => [
+                            String(flight.date.year),
+                            string.padLeft(String(flight.date.month), 2, "0"),
+                            string.padLeft(String(flight.date.day), 2, "0"),
+                        ].join("-"),
+                        // aggregate by month
+                        m: () => [
+                            String(flight.date.year),
+                            string.padLeft(String(flight.date.month), 2, "0"),
+                        ].join("-"),
+                    },
+                    // aggregate by year (default)
+                    () => String(flight.date.year)
+                )
                 if (acc[bucket]) {
                     acc[bucket].duration += flight.duration
                     acc[bucket].flights += 1
