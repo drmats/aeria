@@ -1,16 +1,19 @@
 # aeria
 
-Flightlog.
+[IGC](http://www.ukiws.demon.co.uk/GFAC/documents/tech_spec_gnss.pdf)-based,
+simple air time statistics generator.
 
 <br />
 
 
 
 
-## notes
+## usage
 
-[IGC](http://www.ukiws.demon.co.uk/GFAC/documents/tech_spec_gnss.pdf)-based,
-simple air time statistics generator.
+```
+$ aeria --help
+usage: aeria [-s|--span=y|m|d] [-r|--raw] [--no-total]
+```
 
 </br>
 
