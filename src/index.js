@@ -190,16 +190,14 @@ let
             // from all IGC files in current directory
             stats = await fsp
                 .readdir(".", { withFileTypes: true })
-                .then(func.flow(
-                    entries =>
-                        entries
-                            .filter(entry => entry.isFile())
-                            .filter(file => type.toBool(
-                                file.name.toLowerCase().match(/\.igc$/)
-                            ))
-                            .map(file => file.name),
-                    entries => { let s = entries.slice().sort(); return s }
-                ))
+                .then(entries =>
+                    entries
+                        .filter(entry => entry.isFile())
+                        .filter(file => type.toBool(
+                            file.name.toLowerCase().match(/\.igc$/)
+                        ))
+                        .map(file => file.name)
+                )
                 .then(map(parseIgc))
                 .then(map(o => ({
                     date: o.date,
@@ -264,14 +262,24 @@ let
             )
         }
 
-        // print raw or human-readable times
-        print(options.raw ? aggregated : struct.objectMap(
-            aggregated, ([k, { average, duration, ...rest }]) => [k, {
-                duration: secondsToHours(duration),
-                ...rest,
-                average: secondsToHours(average),
-            }]
-        ))
+        // print output (array of objects)
+        print(
+            Object
+                // raw or human-readable durations
+                .entries(options.raw ? aggregated : struct.objectMap(
+                    aggregated, ([k, { average, duration, ...rest }]) => [k, {
+                        duration: secondsToHours(duration),
+                        ...rest,
+                        average: secondsToHours(average),
+                    }]
+                ))
+                // { date, duration, flights, average, ...}
+                .map(([k, v]) => ({ date: k, ...v }))
+                // sort by date
+                .sort(({ date: d1 }, { date: d2 }) =>
+                    d1 < d2 ? -1 : d1 > d2 ? 1 : 0
+                )
+        )
     }
 
 
