@@ -43,7 +43,7 @@ let
 
     // convert duration represented as seconds
     // into duration represented as "hh:mm" string
-    secondsToHours = (seconds) =>
+    secondsToHoursMinutes = (seconds) =>
         Duration
             .fromObject({ seconds })
             .shiftTo("hours", "minutes")
@@ -166,21 +166,28 @@ let
                 raw: "r",
                 span: "s",
                 total: "t",
+                csv: "c",
             },
-            boolean: ["h", "r", "t"],
+            boolean: ["h", "r", "t", "c"],
             string: ["span"],
             default: {
                 help: false,
                 span: "y",   // y - year, m - month, d - day
                 raw: false,
                 total: true,
+                csv: false,
             },
         })
 
 
         // print help if desired
         if (options.help) {
-            print("usage: aeria [-s|--span=y|m|d] [-r|--raw] [--no-total]")
+            print([
+                "usage:",
+                "aeria [-s|--span=y|m|d]",
+                "[-r|--raw] [--no-total]",
+                "[--c|--csv]",
+            ].join(string.space()))
             process.exit(0)
         }
 
@@ -236,7 +243,10 @@ let
                     }
                 }
                 return acc
-            }, {})
+            }, {}),
+
+            // result
+            output = []
 
 
         // compute average flight time
@@ -262,24 +272,40 @@ let
             )
         }
 
-        // print output (array of objects)
-        print(
-            Object
-                // raw or human-readable durations
-                .entries(options.raw ? aggregated : struct.objectMap(
-                    aggregated, ([k, { average, duration, ...rest }]) => [k, {
-                        duration: secondsToHours(duration),
-                        ...rest,
-                        average: secondsToHours(average),
-                    }]
-                ))
-                // { date, duration, flights, average, ...}
-                .map(([k, v]) => ({ date: k, ...v }))
-                // sort by date
-                .sort(({ date: d1 }, { date: d2 }) =>
-                    d1 < d2 ? -1 : d1 > d2 ? 1 : 0
-                )
-        )
+        // form an output (array of objects)
+        output = Object
+            // raw or human-readable durations
+            .entries(options.raw ? aggregated : struct.objectMap(
+                aggregated, ([k, { average, duration, ...rest }]) => [k, {
+                    duration: secondsToHoursMinutes(duration),
+                    ...rest,
+                    average: secondsToHoursMinutes(average),
+                }]
+            ))
+            // { date, duration, flights, average, ...}
+            .map(([k, v]) => ({ date: k, ...v }))
+            // sort by date
+            .sort(({ date: d1 }, { date: d2 }) =>
+                d1 < d2 ? -1 : d1 > d2 ? 1 : 0
+            )
+
+        // shout it to the stdout
+        if (output.length > 0  &&  options.csv) {
+            print(
+                ["date,duration,flights,average"]
+                    .concat(
+                        output.map(o => [
+                            string.quote(o.date),
+                            options.raw ? o.duration : string.quote(o.duration),
+                            o.flights,
+                            options.raw ? o.average : string.quote(o.average),
+                        ].join(","))
+                    )
+                    .join(string.nl())
+            )
+        } else {
+            print(output)
+        }
     }
 
 

@@ -28,7 +28,7 @@ simple air time statistics generator.
 * available options
     ```bash
     $ aeria --help
-    usage: aeria [-s|--span=y|m|d] [-r|--raw] [--no-total]
+    usage: aeria [-s|--span=y|m|d] [-r|--raw] [--no-total] [--c|--csv]
     ```
 
 </br>
