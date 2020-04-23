@@ -11,13 +11,25 @@
 
 
 import getopts from "getopts"
+import { map as asyncMap } from "@xcmats/js-toolbox/async"
 import {
-    async,
-    func,
-    string,
-    struct,
-    type,
-} from "@xcmats/js-toolbox"
+    choose,
+    rearg,
+} from "@xcmats/js-toolbox/func"
+import {
+    nl,
+    padLeft,
+    quote,
+    space,
+} from "@xcmats/js-toolbox/string"
+import {
+    objectMap,
+    objectReduce,
+} from "@xcmats/js-toolbox/struct"
+import {
+    isArray,
+    toBool,
+} from "@xcmats/js-toolbox/type"
 import {
     DateTime,
     Duration,
@@ -36,7 +48,7 @@ let
 
 
     // async.map argument rearranged and curried (helper)
-    map = func.rearg(async.map)(1, 0),
+    map = rearg(asyncMap)(1, 0),
 
 
 
@@ -54,8 +66,8 @@ let
 
     // classify IGC line type
     classify = (line) =>
-        type.toBool(line.match(/^HFDTE.*/)) ? "date" :
-            type.toBool(line.match(/^B.*/)) ? "position" :
+        toBool(line.match(/^HFDTE.*/)) ? "date" :
+            toBool(line.match(/^B.*/)) ? "position" :
                 "other",
 
 
@@ -67,7 +79,7 @@ let
         let lm = line.match(
             /^HFDTE([0-9]{2})([0-9]{2})([0-9]{2})$/
         )
-        if (!type.isArray(lm)) {
+        if (!isArray(lm)) {
             // new date format
             lm = line.match(
                 /^HFDTEDATE:([0-9]{2})([0-9]{2})([0-9]{2}),.*$/
@@ -134,7 +146,7 @@ let
             .split("\r\n")
             .reduce(
                 (acc, line) =>
-                    func.choose(classify(line), {
+                    choose(classify(line), {
                         date: () => {
                             acc.date = parseDate(line)
                             return acc
@@ -187,7 +199,7 @@ let
                 "aeria [-s|--span=y|m|d]",
                 "[-r|--raw] [--no-total]",
                 "[--c|--csv]",
-            ].join(string.space()))
+            ].join(space()))
             process.exit(0)
         }
 
@@ -200,7 +212,7 @@ let
                 .then(entries =>
                     entries
                         .filter(entry => entry.isFile())
-                        .filter(file => type.toBool(
+                        .filter(file => toBool(
                             file.name.toLowerCase().match(/\.igc$/)
                         ))
                         .map(file => file.name)
@@ -216,18 +228,18 @@ let
 
             // compute aggregated statistics based on per-file summaries
             aggregated = stats.reduce((acc, flight) => {
-                let bucket = func.choose(
+                let bucket = choose(
                     options.span, {
                         // aggregate by day
                         d: () => [
                             String(flight.date.year),
-                            string.padLeft(String(flight.date.month), 2, "0"),
-                            string.padLeft(String(flight.date.day), 2, "0"),
+                            padLeft(String(flight.date.month), 2, "0"),
+                            padLeft(String(flight.date.day), 2, "0"),
                         ].join("-"),
                         // aggregate by month
                         m: () => [
                             String(flight.date.year),
-                            string.padLeft(String(flight.date.month), 2, "0"),
+                            padLeft(String(flight.date.month), 2, "0"),
                         ].join("-"),
                     },
                     // aggregate by year (default)
@@ -250,7 +262,7 @@ let
 
 
         // compute average flight time
-        aggregated = struct.objectMap(
+        aggregated = objectMap(
             aggregated, ([k, { duration, flights, ...rest }]) => [k, {
                 duration, flights, ...rest,
                 average: Math.floor(duration / flights),
@@ -259,7 +271,7 @@ let
 
         // compute totals
         if (options.total) {
-            aggregated["TOTAL"] = struct.objectReduce(
+            aggregated["TOTAL"] = objectReduce(
                 aggregated,
                 (acc, [_, v]) => ({
                     duration: acc.duration + v.duration,
@@ -275,7 +287,7 @@ let
         // form an output (array of objects)
         output = Object
             // raw or human-readable durations
-            .entries(options.raw ? aggregated : struct.objectMap(
+            .entries(options.raw ? aggregated : objectMap(
                 aggregated, ([k, { average, duration, ...rest }]) => [k, {
                     duration: secondsToHoursMinutes(duration),
                     ...rest,
@@ -295,13 +307,13 @@ let
                 ["date,duration,flights,average"]
                     .concat(
                         output.map(o => [
-                            string.quote(o.date),
-                            options.raw ? o.duration : string.quote(o.duration),
+                            quote(o.date),
+                            options.raw ? o.duration : quote(o.duration),
                             o.flights,
-                            options.raw ? o.average : string.quote(o.average),
+                            options.raw ? o.average : quote(o.average),
                         ].join(","))
                     )
-                    .join(string.nl())
+                    .join(nl())
             )
         } else {
             print(output)
