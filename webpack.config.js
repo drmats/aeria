@@ -24,7 +24,12 @@ module.exports = {
     target: "node",
 
 
-    externals: [nodeExternals()],
+    externals: [nodeExternals({
+        whitelist: [
+            /@babel\/runtime(\/.*)?/,
+            /@xcmats\/js-toolbox(\/.*)?/,
+        ],
+    })],
 
 
     entry: {
@@ -46,7 +51,7 @@ module.exports = {
     optimization: {
         minimize: true,
         mergeDuplicateChunks: true,
-        sideEffects: true,
+        sideEffects: false,
         providedExports: true,
         concatenateModules: true,
         occurrenceOrder: true,
