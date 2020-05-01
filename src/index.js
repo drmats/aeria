@@ -26,15 +26,14 @@ import {
     objectMap,
     objectReduce,
 } from "@xcmats/js-toolbox/struct"
-import {
-    isArray,
-    toBool,
-} from "@xcmats/js-toolbox/type"
-import {
-    DateTime,
-    Duration,
-} from "luxon"
+import { toBool } from "@xcmats/js-toolbox/type"
+import { Duration } from "luxon"
 import { promises as fsp } from "fs"
+import {
+    classify,
+    parseDate,
+    parsePoint,
+} from "./igc"
 
 
 
@@ -48,7 +47,7 @@ let
 
 
     // async.map argument rearranged and curried (helper)
-    map = rearg(asyncMap)(1, 0),
+    map = rearg(asyncMap) (1, 0),
 
 
 
@@ -60,81 +59,6 @@ let
             .fromObject({ seconds })
             .shiftTo("hours", "minutes")
             .toFormat("hh:mm"),
-
-
-
-
-    // classify IGC line type
-    classify = (line) =>
-        toBool(line.match(/^HFDTE.*/)) ? "date" :
-            toBool(line.match(/^B.*/)) ? "position" :
-                "other",
-
-
-
-
-    // parse IGC "HFDTE" record into Luxon's DateTime object
-    parseDate = (line) => {
-        // old date format
-        let lm = line.match(
-            /^HFDTE([0-9]{2})([0-9]{2})([0-9]{2})$/
-        )
-        if (!isArray(lm)) {
-            // new date format
-            lm = line.match(
-                /^HFDTEDATE:([0-9]{2})([0-9]{2})([0-9]{2}),.*$/
-            )
-        }
-
-        return DateTime.fromObject({
-            day: parseInt(lm[1], 10),
-            month: parseInt(lm[2], 10),
-            year: parseInt(`20${lm[3]}`, 10),
-        })
-    },
-
-
-
-
-    // parse IGC "B" record
-    parsePoint = (line) => {
-        // B HH MM SS DDMMmmm [NS] DDDMMmmm [EW] [AV] PPPPP GGGGG
-        let
-            dd = "([0-9]{2})",
-            ddd = "([0-9]{3})",
-            lm = line.match(new RegExp(
-                "^B" +                       // type
-                `${dd}${dd}${dd}` +          // time
-                `${dd}${dd}${ddd}([NS])` +   // lat
-                `${ddd}${dd}${ddd}([EW])` +  // lon
-                "([AV])" +                   // fix
-                "([0-9]{5}|-[0-9]{4})" +     // pressure alt
-                "([0-9]{5})"                 // alt
-            ))
-
-        return {
-            time: DateTime.fromObject({
-                hour: parseInt(lm[1], 10),
-                minute: parseInt(lm[2], 10),
-                second: parseInt(lm[3], 10),
-            }),
-            lat: {
-                d: parseInt(lm[4], 10),
-                m: parseInt(lm[5], 10),
-                s: parseInt(lm[6], 10),
-                o: lm[7],
-            },
-            lon: {
-                d: parseInt(lm[8], 10),
-                m: parseInt(lm[9], 10),
-                s: parseInt(lm[10], 10),
-                o: lm[11],
-            },
-            fix: lm[12],
-            palt: parseInt(lm[13], 10),
-            alt: parseInt(lm[14], 10),
-        }
-    },
 
 
 
@@ -200,7 +124,7 @@ let
                 "[-r|--raw] [--no-total]",
                 "[--c|--csv]",
             ].join(space()))
-            process.exit(0)
+            return process.exit(0)
         }
 
 
