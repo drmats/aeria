@@ -5,12 +5,12 @@
 
 // ...
 const
-    fs = require("fs"),
-    path = require("path"),
+    { realpathSync } = require("fs"),
+    { resolve } = require("path"),
     webpack = require("webpack"),
-    MinifyPlugin = require("babel-minify-webpack-plugin"),
-    appDirectory = fs.realpathSync(process.cwd()),
-    nodeExternals = require("webpack-node-externals")
+    MinifyPlugin = require("terser-webpack-plugin"),
+    nodeExternals = require("webpack-node-externals"),
+    appDirectory = realpathSync(process.cwd())
 
 
 
@@ -33,35 +33,38 @@ module.exports = {
 
 
     entry: {
-        "aeria": path.resolve(
-            appDirectory, "src/index.js"
-        ),
+        "aeria": resolve(appDirectory, "src/index.js"),
     },
 
 
     output: {
-        filename: "[name].js",
         chunkFilename: "[name].c.js",
-        path: path.resolve(__dirname, "./dist"),
-        libraryTarget: "commonjs",
+        filename: "[name].js",
         globalObject: "this",
+        libraryTarget: "commonjs",
+        path: resolve(__dirname, "./dist"),
     },
 
 
     optimization: {
-        minimize: true,
-        mergeDuplicateChunks: true,
-        sideEffects: false,
-        providedExports: true,
         concatenateModules: true,
-        occurrenceOrder: true,
-        removeEmptyChunks: true,
-        removeAvailableModules: true,
+        mergeDuplicateChunks: true,
+        minimize: true,
         minimizer: [
-            new MinifyPlugin({}, {
-                comments: false,
+            new MinifyPlugin({
+                terserOptions: {
+                    output: {
+                        comments: false,
+                    },
+                },
+                extractComments: false,
             }),
         ],
+        occurrenceOrder: true,
+        providedExports: true,
+        removeAvailableModules: true,
+        removeEmptyChunks: true,
+        sideEffects: true,
     },
 
 
@@ -77,7 +80,7 @@ module.exports = {
                 test: /\.js$/,
                 exclude: /node_modules/,
                 loader: "babel-loader",
-                sideEffects: false,
+                sideEffects: true,
             },
         ],
     },
