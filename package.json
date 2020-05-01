@@ -19,6 +19,7 @@
     "devDependencies": {
         "@babel/cli": "^7.8.4",
         "@babel/core": "^7.9.6",
+        "@babel/plugin-transform-runtime": "^7.9.6",
         "@babel/preset-env": "^7.9.6",
         "@types/luxon": "^1.22.0",
         "babel-eslint": "^10.1.0",
@@ -52,15 +53,16 @@
         "type": "git",
         "url": "git+https://github.com/drmats/aeria.git"
     },
-    "sideEffects": false,
     "scripts": {
-        "build": "cross-env BABEL_ENV=production webpack -p --config=webpack.config.js",
-        "contBuild": "nodemon -e js --watch ./src/ --exec \"npm run build\"",
+        "build": "cross-env BABEL_ENV=production webpack -p --config=webpack.config.prod.js",
+        "build:dev": "cross-env BABEL_ENV=development webpack -p --config=webpack.config.dev.js",
+        "contBuild": "nodemon -e js --watch ./src/ --exec \"npm run build:dev\"",
         "clean": "rimraf ./dist",
         "clean:modules": "rimraf package-lock.json && rimraf node_modules",
         "lint": "eslint ./src/",
         "start": "node ./dist/aeria.js",
         "test": "echo \"Warning: no tests specified (yet)\""
     },
+    "sideEffects": false,
     "version": "0.0.1"
 }

@@ -9,7 +9,6 @@ const
     { resolve } = require("path"),
     webpack = require("webpack"),
     MinifyPlugin = require("terser-webpack-plugin"),
-    nodeExternals = require("webpack-node-externals"),
     appDirectory = realpathSync(process.cwd())
 
 
@@ -22,14 +21,6 @@ module.exports = {
 
 
     target: "node",
-
-
-    externals: [nodeExternals({
-        whitelist: [
-            /@babel\/runtime(\/.*)?/,
-            /@xcmats\/js-toolbox(\/.*)?/,
-        ],
-    })],
 
 
     entry: {
@@ -78,7 +69,6 @@ module.exports = {
             },
             {
                 test: /\.js$/,
-                exclude: /node_modules/,
                 loader: "babel-loader",
                 sideEffects: true,
             },

@@ -3,6 +3,28 @@
 
 
 
+// ...
+var conf = {
+    presets: [
+        [
+            "@babel/preset-env",
+            {
+                targets: {
+                    node: true,
+                },
+            },
+        ],
+    ],
+    plugins: [
+        "@babel/plugin-transform-runtime",
+    ],
+    comments: false,
+    shouldPrintComment: () => false,
+}
+
+
+
+
 // configuration
 module.exports = function (api) {
     api.cache.using(() => process.env.BABEL_ENV)
@@ -14,20 +36,10 @@ module.exports = function (api) {
         env: {
 
             // production environment
-            production: {
-                presets: [
-                    [
-                        "@babel/preset-env",
-                        {
-                            targets: {
-                                node: true,
-                            },
-                        },
-                    ],
-                ],
-                comments: false,
-                shouldPrintComment: () => false,
-            },
+            production: conf,
+
+            // development environment
+            development: conf,
 
         },
 
