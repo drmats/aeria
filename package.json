@@ -10,7 +10,7 @@
         }
     ],
     "dependencies": {
-        "@babel/runtime": "^7.9.2",
+        "@babel/runtime": "^7.9.6",
         "@xcmats/js-toolbox": "^0.9.7",
         "getopts": "^2.2.5",
         "luxon": "^1.23.0"
@@ -18,9 +18,9 @@
     "description": "Flightlog.",
     "devDependencies": {
         "@babel/cli": "^7.8.4",
-        "@babel/core": "^7.9.0",
+        "@babel/core": "^7.9.6",
         "@babel/plugin-proposal-class-properties": "^7.8.3",
-        "@babel/plugin-proposal-object-rest-spread": "^7.9.5",
+        "@babel/plugin-proposal-object-rest-spread": "^7.9.6",
         "@babel/plugin-syntax-dynamic-import": "^7.8.3",
         "@babel/plugin-transform-arrow-functions": "^7.8.3",
         "@babel/plugin-transform-async-to-generator": "^7.8.3",
@@ -30,14 +30,14 @@
         "@babel/plugin-transform-destructuring": "^7.9.5",
         "@babel/plugin-transform-exponentiation-operator": "^7.8.3",
         "@babel/plugin-transform-literals": "^7.8.3",
-        "@babel/plugin-transform-modules-commonjs": "^7.9.0",
+        "@babel/plugin-transform-modules-commonjs": "^7.9.6",
         "@babel/plugin-transform-parameters": "^7.9.5",
         "@babel/plugin-transform-regenerator": "^7.8.7",
-        "@babel/plugin-transform-runtime": "^7.9.0",
+        "@babel/plugin-transform-runtime": "^7.9.6",
         "@babel/plugin-transform-shorthand-properties": "^7.8.3",
         "@babel/plugin-transform-spread": "^7.8.3",
         "@babel/plugin-transform-template-literals": "^7.8.3",
-        "@babel/preset-env": "^7.9.5",
+        "@babel/preset-env": "^7.9.6",
         "@types/luxon": "^1.22.0",
         "babel-eslint": "^10.1.0",
         "babel-loader": "^8.1.0",
