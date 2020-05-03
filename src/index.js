@@ -33,7 +33,7 @@ import {
     classify,
     parseDate,
     parsePoint,
-} from "./igc"
+} from "./igc.ts"
 
 
 

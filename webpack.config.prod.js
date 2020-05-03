@@ -68,7 +68,7 @@ module.exports = {
                 loader: "eslint-loader",
             },
             {
-                test: /\.js$/,
+                test: /\.(js|ts)$/,
                 loader: "babel-loader",
                 sideEffects: true,
             },

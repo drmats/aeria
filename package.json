@@ -19,8 +19,10 @@
     "devDependencies": {
         "@babel/cli": "^7.8.4",
         "@babel/core": "^7.9.6",
+        "@babel/plugin-proposal-class-properties": "^7.8.3",
         "@babel/plugin-transform-runtime": "^7.9.6",
         "@babel/preset-env": "^7.9.6",
+        "@babel/preset-typescript": "^7.9.0",
         "@types/luxon": "^1.22.0",
         "babel-eslint": "^10.1.0",
         "babel-loader": "^8.1.0",
@@ -31,6 +33,7 @@
         "nodemon": "^1.19.1",
         "rimraf": "^2.6.3",
         "terser-webpack-plugin": "^2.3.6",
+        "typescript": "^3.8.3",
         "webpack": "^4.43.0",
         "webpack-cli": "^3.3.11",
         "webpack-node-externals": "^1.7.2"
@@ -56,12 +59,14 @@
     "scripts": {
         "build": "cross-env BABEL_ENV=production webpack -p --config=webpack.config.prod.js",
         "build:dev": "cross-env BABEL_ENV=development webpack -p --config=webpack.config.dev.js",
+        "build:types": "tsc --emitDeclarationOnly",
         "contBuild": "nodemon -e js --watch ./src/ --exec \"npm run build:dev\"",
         "clean": "rimraf ./dist",
         "clean:modules": "rimraf package-lock.json && rimraf node_modules",
         "lint": "eslint ./src/",
         "start": "node ./dist/aeria.js",
-        "test": "echo \"Warning: no tests specified (yet)\""
+        "test": "echo \"Warning: no tests specified (yet)\"",
+        "type-check": "tsc --noEmit"
     },
     "sideEffects": false,
     "version": "0.0.1"
