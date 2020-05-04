@@ -67,7 +67,7 @@ export const parseDate = (line: string): object => {
  */
 export const parsePoint = (line: string): object => {
 
-    let
+    const
         dd = "([0-9]{2})",
         ddd = "([0-9]{3})",
         lm = line.match(new RegExp([

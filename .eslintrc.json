@@ -6,7 +6,10 @@
         "node": true
     },
 
-    "extends": "eslint:recommended",
+    "extends": [
+        "eslint:recommended"
+    ],
+
     "parser": "babel-eslint",
     "parserOptions": {
         "ecmaFeatures": {
@@ -52,6 +55,21 @@
         "import/first": "error",
         "import/no-amd": "error",
         "import/no-webpack-loader-syntax": "error"
-    }
+    },
+
+    "overrides": [
+        {
+            "files": ["*.ts"],
+            "parser": "@typescript-eslint/parser",
+            "extends": [
+                "eslint:recommended",
+                "plugin:@typescript-eslint/eslint-recommended",
+                "plugin:@typescript-eslint/recommended"
+            ],
+            "plugins": [
+                "@typescript-eslint"
+            ]
+        }
+    ]
 
 }
