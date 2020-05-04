@@ -11,7 +11,7 @@
     ],
     "dependencies": {
         "@babel/runtime": "^7.9.6",
-        "@xcmats/js-toolbox": "^0.9.7",
+        "@xcmats/js-toolbox": "^0.9.8",
         "getopts": "^2.2.5",
         "luxon": "^1.24.0"
     },
