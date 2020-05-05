@@ -13,10 +13,6 @@
 import getopts from "getopts"
 import { map as asyncMap } from "@xcmats/js-toolbox/async"
 import {
-    head,
-    last,
-} from "@xcmats/js-toolbox/array"
-import {
     choose,
     rearg,
 } from "@xcmats/js-toolbox/func"
@@ -86,10 +82,7 @@ let
                 return {
                     name: igc.name,
                     date: igc.date,
-                    duration:
-                        last(igc.points).time
-                            .diff(head(igc.points).time, "seconds")
-                            .seconds,
+                    duration: igc.stats.duration,
                 }
             }
         ) (await getIgcFilenames(directory)),

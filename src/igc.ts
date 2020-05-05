@@ -11,6 +11,10 @@
 
 
 import { promises as fsp } from "fs";
+import {
+    head,
+    last,
+} from "@xcmats/js-toolbox/array";
 import { empty } from "@xcmats/js-toolbox/string";
 import { isArray } from "@xcmats/js-toolbox/type";
 import { DateTime } from "luxon";
@@ -151,13 +155,35 @@ export const parsePoint = (line: string): Position => {
 
 
 /**
+ * IGC flight stats.
+ */
+export interface FlightStats {
+    duration: number;
+}
+
+
+
+
+/**
  * IGC file structure.
  */
 export interface Track {
     name: string;
     date: DateTime;
     points: Position[];
+    stats: FlightStats;
 }
+
+
+
+
+/**
+ * Calculate flight duration.
+ */
+export const calculateDuration = (points: Position[]): number =>
+    (last(points) as Position).time
+        .diff((head(points) as Position).time, "seconds")
+        .seconds;
 
 
 
@@ -190,7 +216,12 @@ export const parseFile = async (name: string): Promise<Track> => {
     }
 
     if (date) {
-        return { name, date, points };
+        return {
+            name, date, points,
+            stats: {
+                duration: calculateDuration(points),
+            },
+        };
     } else
         throw new Error(`igc::parseFile() - no 'date' record found: ${name}`);
 
