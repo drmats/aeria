@@ -10,12 +10,10 @@
 
 
 
-import { empty } from "@xcmats/js-toolbox/string"
-import {
-    isArray,
-    toBool,
-} from "@xcmats/js-toolbox/type"
-import { DateTime } from "luxon"
+import { promises as fsp } from "fs";
+import { empty } from "@xcmats/js-toolbox/string";
+import { isArray } from "@xcmats/js-toolbox/type";
+import { DateTime } from "luxon";
 
 
 
@@ -35,10 +33,13 @@ export enum IGCRecordType {
 /**
  * Classify IGC line type.
  */
-export const classify = (line: string): IGCRecordType =>
-    toBool(line.match(/^HFDTE.*/)) ? IGCRecordType.Date :
-        toBool(line.match(/^B.*/)) ? IGCRecordType.Position :
-            IGCRecordType.Other
+export const classify = (line: string): IGCRecordType => {
+
+    if (line.match(/^HFDTE.*/)) return IGCRecordType.Date;
+    if (line.match(/^B.*/)) return IGCRecordType.Position;
+    return IGCRecordType.Other;
+
+};
 
 
 
@@ -48,16 +49,12 @@ export const classify = (line: string): IGCRecordType =>
  */
 export const parseDate = (line: string): DateTime => {
 
-    // old date format
-    let lm = line.match(
-        /^HFDTE([0-9]{2})([0-9]{2})([0-9]{2})$/
-    )
+    // old date format ...
+    let lm = line.match(/^HFDTE([0-9]{2})([0-9]{2})([0-9]{2})$/);
 
+    // ... or a new date format
     if (!isArray(lm)) {
-        // new date format
-        lm = line.match(
-            /^HFDTEDATE:([0-9]{2})([0-9]{2})([0-9]{2}),.*$/
-        )
+        lm = line.match(/^HFDTEDATE:([0-9]{2})([0-9]{2})([0-9]{2}),.*$/);
     }
 
     if (lm) {
@@ -65,11 +62,11 @@ export const parseDate = (line: string): DateTime => {
             day: parseInt(lm[1], 10),
             month: parseInt(lm[2], 10),
             year: parseInt(`20${lm[3]}`, 10),
-        })
+        });
     } else
-        throw new Error(`Unrecognized date record: ${line}`)
+        throw new Error(`igc::parseDate() - unrecognized record: ${line}`);
 
-}
+};
 
 
 
@@ -119,8 +116,8 @@ export const parsePoint = (line: string): Position => {
             `${ddd}${dd}${ddd}([EW])`,  // lon
             "([AV])",                   // fix
             "([0-9]{5}|-[0-9]{4})",     // pressure alt
-            "([0-9]{5})",               // alt
-        ].join(empty())))
+            "([0-9]{5}|-[0-9]{4})",     // alt
+        ].join(empty())));
 
     if (lm) {
         return {
@@ -144,8 +141,57 @@ export const parsePoint = (line: string): Position => {
             fix: lm[12],
             palt: parseInt(lm[13], 10),
             alt: parseInt(lm[14], 10),
-        }
+        };
     } else
-        throw new Error(`Unrecognized point record: ${line}`)
+        throw new Error(`igc::parsePoint() - unrecognized record: ${line}`);
 
+};
+
+
+
+
+/**
+ * IGC file structure.
+ */
+export interface Track {
+    name: string;
+    date: DateTime;
+    points: Position[];
 }
+
+
+
+
+/**
+ * Parse IGC file.
+ */
+export const parseFile = async (name: string): Promise<Track> => {
+
+    const
+        lines = (await fsp.readFile(name, "utf8")).split("\r\n"),
+        points = [];
+
+    let date = null;
+
+    for (const line of lines) {
+
+        switch (classify(line)) {
+
+            case IGCRecordType.Date:
+                date = parseDate(line);
+                break;
+
+            case IGCRecordType.Position:
+                points.push(parsePoint(line));
+                break;
+
+        }
+
+    }
+
+    if (date) {
+        return { name, date, points };
+    } else
+        throw new Error(`igc::parseFile() - no 'date' record found: ${name}`);
+
+};

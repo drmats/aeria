@@ -13,6 +13,10 @@
 import getopts from "getopts"
 import { map as asyncMap } from "@xcmats/js-toolbox/async"
 import {
+    head,
+    last,
+} from "@xcmats/js-toolbox/array"
+import {
     choose,
     rearg,
 } from "@xcmats/js-toolbox/func"
@@ -29,11 +33,7 @@ import {
 import { toBool } from "@xcmats/js-toolbox/type"
 import { Duration } from "luxon"
 import { promises as fsp } from "fs"
-import {
-    classify,
-    parseDate,
-    parsePoint,
-} from "./igc.ts"
+import { parseFile } from "./igc.ts"
 
 
 
@@ -63,38 +63,43 @@ let
 
 
 
-    // open IGC file, read its contents, split to lines,
-    // parse interesting ones, produce simple summary
-    parseIgc = async (filename) =>
-        (await fsp.readFile(filename, "utf8"))
-            .split("\r\n")
-            .reduce(
-                (acc, line) =>
-                    choose(classify(line), {
-                        /* IGCRecordType.Date */ 0: () => {
-                            acc.date = parseDate(line)
-                            return acc
-                        },
-                        /* IGCRecordType.Position */ 1: () => {
-                            if (acc.first === null) {
-                                acc.first = line
-                            }
-                            acc.last = line
-                            return acc
-                        },
-                    }, () => acc),
-                {
-                    date: null,
-                    first: null,
-                    last: null,
+    // get array of igc filenames in given directory
+    getIgcFilenames = async directory =>
+        (await fsp.readdir(directory, { withFileTypes: true }))
+            .filter(entry =>
+                entry.isFile() && toBool(
+                    entry.name.toLowerCase().match(/\.igc$/)
+                )
+            )
+            .map(file => file.name),
+
+
+
+
+    // create per-file summaries
+    // from all IGC files in a given directory
+    computeStats = async directory =>
+        await map(
+            async igcFilename => {
+                print(igcFilename)
+                let igc = await parseFile(igcFilename)
+                return {
+                    name: igc.name,
+                    date: igc.date,
+                    duration:
+                        last(igc.points).time
+                            .diff(head(igc.points).time, "seconds")
+                            .seconds,
                 }
-            ),
+            }
+        ) (await getIgcFilenames(directory)),
 
 
 
 
     // ...
     main = async () => {
+
         // program options
         const options = getopts(process.argv.slice(2), {
             alias: {
@@ -128,120 +133,114 @@ let
         }
 
 
-        let
-            // create per-file summaries
-            // from all IGC files in current directory
-            stats = await fsp
-                .readdir(".", { withFileTypes: true })
-                .then(entries =>
-                    entries
-                        .filter(entry => entry.isFile())
-                        .filter(file => toBool(
-                            file.name.toLowerCase().match(/\.igc$/)
-                        ))
-                        .map(file => file.name)
-                )
-                .then(map(parseIgc))
-                .then(map(o => ({
-                    date: o.date,
-                    duration:
-                        parsePoint(o.last).time.diff(
-                            parsePoint(o.first).time, "seconds"
-                        ).seconds,
-                }))),
+        try {
 
-            // compute aggregated statistics based on per-file summaries
-            aggregated = stats.reduce((acc, flight) => {
-                let bucket = choose(
-                    options.span, {
-                        // aggregate by day
-                        d: () => [
-                            String(flight.date.year),
-                            padLeft(String(flight.date.month), 2, "0"),
-                            padLeft(String(flight.date.day), 2, "0"),
-                        ].join("-"),
-                        // aggregate by month
-                        m: () => [
-                            String(flight.date.year),
-                            padLeft(String(flight.date.month), 2, "0"),
-                        ].join("-"),
-                    },
-                    // aggregate by year (default)
-                    () => String(flight.date.year)
-                )
-                if (acc[bucket]) {
-                    acc[bucket].duration += flight.duration
-                    acc[bucket].flights += 1
-                } else {
-                    acc[bucket] = {
-                        duration: flight.duration,
-                        flights: 1,
-                    }
-                }
-                return acc
-            }, {}),
+            let
 
-            // result
-            output = []
+                // compute stats
+                stats = await computeStats("."),
 
-
-        // compute average flight time
-        aggregated = objectMap(
-            aggregated, ([k, { duration, flights, ...rest }]) => [k, {
-                duration, flights, ...rest,
-                average: Math.floor(duration / flights),
-            }]
-        )
-
-        // compute totals
-        if (options.total) {
-            aggregated["TOTAL"] = objectReduce(
-                aggregated,
-                (acc, [_, v]) => ({
-                    duration: acc.duration + v.duration,
-                    flights: acc.flights + v.flights,
-                }),
-                { duration: 0, flights: 0 }
-            )
-            aggregated["TOTAL"].average = Math.floor(
-                aggregated["TOTAL"].duration / aggregated["TOTAL"].flights
-            )
-        }
-
-        // form an output (array of objects)
-        output = Object
-            // raw or human-readable durations
-            .entries(options.raw ? aggregated : objectMap(
-                aggregated, ([k, { average, duration, ...rest }]) => [k, {
-                    duration: secondsToHoursMinutes(duration),
-                    ...rest,
-                    average: secondsToHoursMinutes(average),
-                }]
-            ))
-            // { date, duration, flights, average, ...}
-            .map(([k, v]) => ({ date: k, ...v }))
-            // sort by date
-            .sort(({ date: d1 }, { date: d2 }) =>
-                d1 < d2 ? -1 : d1 > d2 ? 1 : 0
-            )
-
-        // shout it to the stdout
-        if (output.length > 0  &&  options.csv) {
-            print(
-                ["date,duration,flights,average"]
-                    .concat(
-                        output.map(o => [
-                            quote(o.date),
-                            options.raw ? o.duration : quote(o.duration),
-                            o.flights,
-                            options.raw ? o.average : quote(o.average),
-                        ].join(","))
+                // compute aggregated statistics based on per-file summaries
+                aggregated = stats.reduce((acc, flight) => {
+                    let bucket = choose(
+                        options.span, {
+                            // aggregate by day
+                            d: () => [
+                                String(flight.date.year),
+                                padLeft(String(flight.date.month), 2, "0"),
+                                padLeft(String(flight.date.day), 2, "0"),
+                            ].join("-"),
+                            // aggregate by month
+                            m: () => [
+                                String(flight.date.year),
+                                padLeft(String(flight.date.month), 2, "0"),
+                            ].join("-"),
+                        },
+                        // aggregate by year (default)
+                        () => String(flight.date.year)
                     )
-                    .join(nl())
+                    if (acc[bucket]) {
+                        acc[bucket].duration += flight.duration
+                        acc[bucket].flights += 1
+                    } else {
+                        acc[bucket] = {
+                            duration: flight.duration,
+                            flights: 1,
+                        }
+                    }
+                    return acc
+                }, {}),
+
+                // result
+                output = []
+
+            // ...
+            print()
+
+            // compute average flight time
+            aggregated = objectMap(
+                aggregated, ([k, { duration, flights, ...rest }]) => [k, {
+                    duration, flights, ...rest,
+                    average: Math.floor(duration / flights),
+                }]
             )
-        } else {
-            print(output)
+
+            // compute totals
+            if (options.total) {
+                aggregated["TOTAL"] = objectReduce(
+                    aggregated,
+                    (acc, [_, v]) => ({
+                        duration: acc.duration + v.duration,
+                        flights: acc.flights + v.flights,
+                    }),
+                    { duration: 0, flights: 0 }
+                )
+                aggregated["TOTAL"].average = Math.floor(
+                    aggregated["TOTAL"].duration / aggregated["TOTAL"].flights
+                )
+            }
+
+            // form an output (array of objects)
+            output = Object
+                // raw or human-readable durations
+                .entries(options.raw ? aggregated : objectMap(
+                    aggregated, ([k, { average, duration, ...rest }]) => [k, {
+                        duration: secondsToHoursMinutes(duration),
+                        ...rest,
+                        average: secondsToHoursMinutes(average),
+                    }]
+                ))
+                // { date, duration, flights, average, ...}
+                .map(([k, v]) => ({ date: k, ...v }))
+                // sort by date
+                .sort(({ date: d1 }, { date: d2 }) =>
+                    d1 < d2 ? -1 : d1 > d2 ? 1 : 0
+                )
+
+            // shout it to the stdout
+            if (output.length > 0  &&  options.csv) {
+                print(
+                    ["date,duration,flights,average"]
+                        .concat(
+                            output.map(o => [
+                                quote(o.date),
+                                options.raw ? o.duration : quote(o.duration),
+                                o.flights,
+                                options.raw ? o.average : quote(o.average),
+                            ].join(","))
+                        )
+                        .join(nl())
+                )
+            } else {
+                print(output)
+            }
+
+        // deal with (async) errors
+        } catch (ex) {
+            print(ex)
+            process.exit(-1)
         }
+
     }
 
 
