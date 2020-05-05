@@ -11,7 +11,7 @@
     ],
     "dependencies": {
         "@babel/runtime": "^7.9.6",
-        "@xcmats/js-toolbox": "^0.9.10",
+        "@xcmats/js-toolbox": "^0.9.11",
         "getopts": "^2.2.5",
         "luxon": "^1.24.0"
     },
@@ -66,7 +66,7 @@
         "contBuild": "nodemon -e js,ts --watch ./src/ --exec \"npm run build:dev\"",
         "clean": "rimraf ./dist",
         "clean:modules": "rimraf package-lock.json && rimraf node_modules",
-        "lint": "eslint ./src/ --ext .js,.ts",
+        "lint": "echo \"Linting and typechecking...\" && eslint ./src/ --ext .js,.ts && npm run type-check",
         "start": "node ./dist/aeria.js",
         "test": "echo \"Warning: no tests specified (yet)\"",
         "type-check": "tsc --noEmit"
