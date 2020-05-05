@@ -1,6 +1,6 @@
 # aeria
 
-[IGC](http://www.ukiws.demon.co.uk/GFAC/documents/tech_spec_gnss.pdf)-based,
+[IGC](https://www.fai.org/sites/default/files/igc_fr_ts_2016.pdf)-based,
 simple air time statistics generator.
 
 <br />
