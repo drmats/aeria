@@ -48,6 +48,12 @@ let
 
 
 
+    // pretty-print helper
+    pad = rearg(padLeft) (2, 1, 0) (space(), 10),
+
+
+
+
     // convert duration represented as seconds
     // into duration represented as "hh:mm" string
     secondsToHoursMinutes = (seconds) =>
@@ -101,15 +107,17 @@ let
                 span: "s",
                 total: "t",
                 csv: "c",
+                file: "f",
             },
             boolean: ["h", "r", "t", "c"],
-            string: ["span"],
+            string: ["span", "file"],
             default: {
                 help: false,
                 span: "y",   // y - year, m - month, d - day
                 raw: false,
                 total: true,
                 csv: false,
+                file: null,
             },
         })
 
@@ -120,13 +128,40 @@ let
                 "usage:",
                 "aeria [-s|--span=y|m|d]",
                 "[-r|--raw] [--no-total]",
-                "[--c|--csv]",
+                "[-c|--csv]",
+                "[-f|--file=FILE]",
             ].join(space()))
             return process.exit(0)
         }
 
 
         try {
+
+            if (options.file) {
+
+                let igc = await parseFile(options.file)
+
+                print(
+                    pad("name:"),
+                    igc.name
+                )
+                print(
+                    pad("date:"),
+                    igc.date.toISODate()
+                )
+                print(
+                    pad("duration:"),
+                    secondsToHoursMinutes(igc.stats.duration)
+                )
+                print(
+                    pad("points:"),
+                    igc.points.length
+                )
+
+                return
+
+            }
+
 
             let
 
