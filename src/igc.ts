@@ -159,6 +159,7 @@ export const parsePoint = (line: string): Position => {
  */
 export interface FlightStats {
     duration: number;
+    maxAltGain: number;
 }
 
 
@@ -184,6 +185,43 @@ export const calculateDuration = (points: Position[]): number =>
     (last(points) as Position).time
         .diff((head(points) as Position).time, "seconds")
         .seconds;
+
+
+
+
+/**
+ * Calculate maximum altitude gain.
+ */
+export const calculateMaxAltGain = (points: Position[]): number => {
+
+    let
+        min = [0, 0],
+        max = 0,
+        gain = 0;
+
+    points.forEach((point, i) => {
+        if (i === 0) {
+            min = [point.alt, i];
+            max = point.alt;
+        } else {
+            const prev = points[i-1].alt;
+            if (prev <= point.alt) {
+                // ascending
+                if (point.alt > max) max = point.alt;
+                const newGain = point.alt - min[0];
+                if (newGain > gain) {
+                    gain = newGain;
+                }
+            } else {
+                // descending
+                if (point.alt < min[0]) min = [point.alt, i];
+            }
+        }
+    });
+
+    return gain;
+
+};
 
 
 
@@ -220,6 +258,7 @@ export const parseFile = async (name: string): Promise<Track> => {
             name, date, points,
             stats: {
                 duration: calculateDuration(points),
+                maxAltGain: calculateMaxAltGain(points),
             },
         };
     } else

@@ -49,7 +49,7 @@ let
 
 
     // pretty-print helper
-    pad = rearg(padLeft) (2, 1, 0) (space(), 10),
+    pad = rearg(padLeft) (2, 1, 0) (space(), 15),
 
 
 
@@ -156,6 +156,10 @@ let
                 print(
                     pad("points:"),
                     igc.points.length
+                )
+                print(
+                    pad("max alt. gain:"),
+                    igc.stats.maxAltGain
                 )
 
                 return
