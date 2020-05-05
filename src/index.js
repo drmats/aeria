@@ -71,11 +71,11 @@ let
             .reduce(
                 (acc, line) =>
                     choose(classify(line), {
-                        date: () => {
+                        /* IGCRecordType.Date */ 0: () => {
                             acc.date = parseDate(line)
                             return acc
                         },
-                        position: () => {
+                        /* IGCRecordType.Position */ 1: () => {
                             if (acc.first === null) {
                                 acc.first = line
                             }

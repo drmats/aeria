@@ -21,12 +21,24 @@ import { DateTime } from "luxon"
 
 
 /**
+ * IGC record type.
+ */
+export enum IGCRecordType {
+    Date,
+    Position,
+    Other,
+}
+
+
+
+
+/**
  * Classify IGC line type.
  */
-export const classify = (line: string): string =>
-    toBool(line.match(/^HFDTE.*/)) ? "date" :
-        toBool(line.match(/^B.*/)) ? "position" :
-            "other"
+export const classify = (line: string): IGCRecordType =>
+    toBool(line.match(/^HFDTE.*/)) ? IGCRecordType.Date :
+        toBool(line.match(/^B.*/)) ? IGCRecordType.Position :
+            IGCRecordType.Other
 
 
 
@@ -34,7 +46,8 @@ export const classify = (line: string): string =>
 /**
  * Parse IGC "HFDTE" record into Luxon's DateTime object.
  */
-export const parseDate = (line: string): object => {
+export const parseDate = (line: string): DateTime => {
+
     // old date format
     let lm = line.match(
         /^HFDTE([0-9]{2})([0-9]{2})([0-9]{2})$/
@@ -55,6 +68,35 @@ export const parseDate = (line: string): object => {
         })
     } else
         throw new Error(`Unrecognized date record: ${line}`)
+
+}
+
+
+
+
+/**
+ * Coordinate: degrees, minutes, seconds, orientation.
+ */
+export interface Coord {
+    d: number;
+    m: number;
+    s: number;
+    o: string;
+}
+
+
+
+
+/**
+ * Point on track.
+ */
+export interface Position {
+    time: DateTime;
+    lat: Coord;
+    lon: Coord;
+    fix: string;
+    palt: number;
+    alt: number;
 }
 
 
@@ -65,7 +107,7 @@ export const parseDate = (line: string): object => {
  *
  * B HH MM SS DDMMmmm [NS] DDDMMmmm [EW] [AV] PPPPP GGGGG
  */
-export const parsePoint = (line: string): object => {
+export const parsePoint = (line: string): Position => {
 
     const
         dd = "([0-9]{2})",
@@ -105,4 +147,5 @@ export const parsePoint = (line: string): object => {
         }
     } else
         throw new Error(`Unrecognized point record: ${line}`)
+
 }
