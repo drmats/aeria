@@ -62,7 +62,7 @@
         "build": "cross-env BABEL_ENV=production webpack -p --config=webpack.config.prod.js",
         "build:dev": "cross-env BABEL_ENV=development webpack -p --config=webpack.config.dev.js",
         "build:types": "tsc --emitDeclarationOnly",
-        "contBuild": "nodemon -e js --watch ./src/ --exec \"npm run build:dev\"",
+        "contBuild": "nodemon -e js,ts --watch ./src/ --exec \"npm run build:dev\"",
         "clean": "rimraf ./dist",
         "clean:modules": "rimraf package-lock.json && rimraf node_modules",
         "lint": "eslint ./src/ --ext .js,.ts",
