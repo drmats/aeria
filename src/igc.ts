@@ -12,7 +12,6 @@
 
 import { promises as fsp } from "fs";
 import { empty } from "@xcmats/js-toolbox/string";
-import { isArray } from "@xcmats/js-toolbox/type";
 import { DateTime } from "luxon";
 
 
@@ -94,22 +93,16 @@ export class IGCDate extends IGCBase<DateTime> {
 
     parse (): DateTime { return IGCDate.parse(this.raw); }
 
-    // Parse IGC "HFDTE" record into Luxon's DateTime object.
+    // Parse IGC DATE record into Luxon's DateTime object.
     static parse (line: string): DateTime {
 
-        // old date format ...
-        let lm = line.match(/^HFDTE([0-9]{2})([0-9]{2})([0-9]{2})$/);
-
-        // ... or a new date format
-        if (!isArray(lm)) {
-            lm = line.match(/^HFDTEDATE:([0-9]{2})([0-9]{2})([0-9]{2}),.*$/);
-        }
+        const lm = line.match(/^HFDTE(DATE:)?([0-9]{2})([0-9]{2})([0-9]{2})(,.*)?$/);
 
         if (lm) {
             return DateTime.fromObject({
-                day: parseInt(lm[1], 10),
-                month: parseInt(lm[2], 10),
-                year: parseInt(`20${lm[3]}`, 10),
+                day: parseInt(lm[2], 10),
+                month: parseInt(lm[3], 10),
+                year: parseInt(`20${lm[4]}`, 10),
             });
         } else
             throw new Error(`IGCDate::parse() - unrecognized: ${line}`);
