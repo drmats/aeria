@@ -91,7 +91,7 @@ let
                 let igc = await parseFile(igcFilename)
                 return {
                     name: igc.name,
-                    date: igc.date.value,
+                    date: igc.date.val,
                     duration: calculateDuration(igc.points),
                 }
             }
@@ -154,7 +154,7 @@ let
                 )
                 print(
                     pad("date:"),
-                    igc.date.value.toISODate()
+                    igc.date.val.toISODate()
                 )
                 print(
                     pad("points:"),

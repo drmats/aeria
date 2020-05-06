@@ -47,9 +47,36 @@ export const classify = (line: string): IGCRecordType => {
 /**
  * Base IGC record.
  */
-export interface IGCRecord {
+export interface IGCRecord<T> {
     type: IGCRecordType;
     raw: string;
+    val: T;
+}
+
+
+
+
+/**
+ * ...
+ */
+export abstract class IGCBase<T> implements IGCRecord<T> {
+
+    // IGCRecord fields
+    abstract type: IGCRecordType;
+    raw: string;
+
+
+    #memo: undefined | T;
+
+    // ...
+    constructor (raw: string) { this.raw = raw; }
+
+    abstract parse (): T;
+
+    get val (): T {
+        if (!this.#memo) { this.#memo = this.parse(); }
+        return this.#memo;
+    }
 }
 
 
@@ -58,27 +85,11 @@ export interface IGCRecord {
 /**
  * IGC date.
  */
-export class IGCDate implements IGCRecord {
+export class IGCDate extends IGCBase<DateTime> {
 
-    // IGCRecord fields
     type = IGCRecordType.Date;
-    raw: string;
 
-
-    // parsed value (luxon's DateTime object)
-    #parsed: undefined | DateTime;
-
-
-    // ...
-    constructor (raw: string) { this.raw = raw; }
-
-
-    // lazy getter (parse-on-demand)
-    get value (): DateTime {
-        if (!this.#parsed) { this.#parsed = IGCDate.parse(this.raw); }
-        return this.#parsed;
-    }
-
+    parse (): DateTime { return IGCDate.parse(this.raw); }
 
     // Parse IGC "HFDTE" record into Luxon's DateTime object.
     static parse (line: string): DateTime {
@@ -140,7 +151,7 @@ export interface Position {
  *
  * B HH MM SS DDMMmmm [NS] DDDMMmmm [EW] [AV] PPPPP GGGGG
  */
-export const parsePoint = (line: string): Position => {
+export const parsePosition = (line: string): Position => {
 
     const
         dd = "([0-9]{2})",
@@ -179,7 +190,7 @@ export const parsePoint = (line: string): Position => {
             alt: parseInt(lm[14], 10),
         };
     } else
-        throw new Error(`igc::parsePoint() - unrecognized record: ${line}`);
+        throw new Error(`igc::parsePosition() - unrecognized record: ${line}`);
 
 };
 
@@ -218,7 +229,7 @@ export const parseFile = async (name: string): Promise<Track> => {
                 break;
 
             case IGCRecordType.Position:
-                points.push(parsePoint(line));
+                points.push(parsePosition(line));
                 break;
 
         }
