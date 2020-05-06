@@ -29,7 +29,11 @@ import {
 import { toBool } from "@xcmats/js-toolbox/type"
 import { Duration } from "luxon"
 import { promises as fsp } from "fs"
-import { parseFile } from "./igc.ts"
+import {
+    calculateAllStats,
+    calculateDuration,
+    parseFile,
+} from "./igc.ts"
 
 
 
@@ -80,7 +84,7 @@ let
 
     // create per-file summaries
     // from all IGC files in a given directory
-    computeStats = async directory =>
+    computeSummaryStats = async directory =>
         await map(
             async igcFilename => {
                 print(igcFilename)
@@ -88,7 +92,7 @@ let
                 return {
                     name: igc.name,
                     date: igc.date,
-                    duration: igc.stats.duration,
+                    duration: calculateDuration(igc.points),
                 }
             }
         ) (await getIgcFilenames(directory)),
@@ -137,9 +141,12 @@ let
 
         try {
 
+            // single-file stats printer
             if (options.file) {
 
-                let igc = await parseFile(options.file)
+                let
+                    igc = await parseFile(options.file),
+                    stats = calculateAllStats(igc)
 
                 print(
                     pad("name:"),
@@ -150,16 +157,16 @@ let
                     igc.date.toISODate()
                 )
                 print(
-                    pad("duration:"),
-                    secondsToHoursMinutes(igc.stats.duration)
-                )
-                print(
                     pad("points:"),
                     igc.points.length
                 )
                 print(
+                    pad("duration:"),
+                    secondsToHoursMinutes(stats.duration)
+                )
+                print(
                     pad("max alt. gain:"),
-                    igc.stats.maxAltGain
+                    stats.maxAltGain
                 )
 
                 return
@@ -170,7 +177,7 @@ let
             let
 
                 // compute stats
-                stats = await computeStats("."),
+                stats = await computeSummaryStats("."),
 
                 // compute aggregated statistics based on per-file summaries
                 aggregated = stats.reduce((acc, flight) => {
