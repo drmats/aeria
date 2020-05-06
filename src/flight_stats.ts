@@ -15,7 +15,7 @@ import {
     last,
 } from "@xcmats/js-toolbox/array";
 import {
-    Position,
+    IGCPosition,
     Track,
 } from "./igc";
 
@@ -36,9 +36,9 @@ export interface FlightStats {
 /**
  * Calculate flight duration.
  */
-export const calculateDuration = (points: Position[]): number =>
-    (last(points) as Position).time
-        .diff((head(points) as Position).time, "seconds")
+export const calculateDuration = (points: IGCPosition[]): number =>
+    (last(points) as IGCPosition).val.time
+        .diff((head(points) as IGCPosition).val.time, "seconds")
         .seconds;
 
 
@@ -47,26 +47,26 @@ export const calculateDuration = (points: Position[]): number =>
 /**
  * Calculate maximum altitude gain.
  */
-export const calculateMaxAltGain = (points: Position[]): number => {
+export const calculateMaxAltGain = (points: IGCPosition[]): number => {
 
     let min = 0, max = 0, gain = 0;
 
     points.forEach((point, i) => {
         if (i === 0) {
-            min = point.alt;
-            max = point.alt;
+            min = point.val.alt;
+            max = point.val.alt;
         } else {
-            const prev = points[i-1].alt;
-            if (prev <= point.alt) {
+            const prev = points[i-1].val.alt;
+            if (prev <= point.val.alt) {
                 // ascending
-                if (point.alt > max) max = point.alt;
-                const newGain = point.alt - min;
+                if (point.val.alt > max) max = point.val.alt;
+                const newGain = point.val.alt - min;
                 if (newGain > gain) {
                     gain = newGain;
                 }
             } else {
                 // descending
-                if (point.alt < min) min = point.alt;
+                if (point.val.alt < min) min = point.val.alt;
             }
         }
     });

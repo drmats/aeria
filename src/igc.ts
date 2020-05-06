@@ -57,7 +57,7 @@ export interface IGCRecord<T> {
 
 
 /**
- * ...
+ * Base class for all IGC records.
  */
 export abstract class IGCBase<T> implements IGCRecord<T> {
 
@@ -65,18 +65,21 @@ export abstract class IGCBase<T> implements IGCRecord<T> {
     abstract type: IGCRecordType;
     raw: string;
 
-
+    // memoized value
     #memo: undefined | T;
 
-    // ...
+    // default constructor
     constructor (raw: string) { this.raw = raw; }
 
+    // mean to parse raw value
     abstract parse (): T;
 
+    // parsed value getter
     get val (): T {
         if (!this.#memo) { this.#memo = this.parse(); }
         return this.#memo;
     }
+
 }
 
 
@@ -109,7 +112,7 @@ export class IGCDate extends IGCBase<DateTime> {
                 year: parseInt(`20${lm[3]}`, 10),
             });
         } else
-            throw new Error(`IGCDate::parse() - unrecognized record: ${line}`);
+            throw new Error(`IGCDate::parse() - unrecognized: ${line}`);
 
     }
 
@@ -147,52 +150,60 @@ export interface Position {
 
 
 /**
- * Parse IGC "B" record.
- *
- * B HH MM SS DDMMmmm [NS] DDDMMmmm [EW] [AV] PPPPP GGGGG
+ * IGC position.
  */
-export const parsePosition = (line: string): Position => {
+export class IGCPosition extends IGCBase<Position> {
 
-    const
-        dd = "([0-9]{2})",
-        ddd = "([0-9]{3})",
-        lm = line.match(new RegExp([
-            "^B",                       // type
-            `${dd}${dd}${dd}`,          // time
-            `${dd}${dd}${ddd}([NS])`,   // lat
-            `${ddd}${dd}${ddd}([EW])`,  // lon
-            "([AV])",                   // fix
-            "([0-9]{5}|-[0-9]{4})",     // pressure alt
-            "([0-9]{5}|-[0-9]{4})",     // alt
-        ].join(empty())));
+    type = IGCRecordType.Position;
 
-    if (lm) {
-        return {
-            time: DateTime.fromObject({
-                hour: parseInt(lm[1], 10),
-                minute: parseInt(lm[2], 10),
-                second: parseInt(lm[3], 10),
-            }),
-            lat: {
-                d: parseInt(lm[4], 10),
-                m: parseInt(lm[5], 10),
-                s: parseInt(lm[6], 10),
-                o: lm[7],
-            },
-            lon: {
-                d: parseInt(lm[8], 10),
-                m: parseInt(lm[9], 10),
-                s: parseInt(lm[10], 10),
-                o: lm[11],
-            },
-            fix: lm[12],
-            palt: parseInt(lm[13], 10),
-            alt: parseInt(lm[14], 10),
-        };
-    } else
-        throw new Error(`igc::parsePosition() - unrecognized record: ${line}`);
+    parse (): Position { return IGCPosition.parse(this.raw); }
 
-};
+    // Parse IGC "B" record.
+    static parse (line: string): Position {
+
+        // B HH MM SS DDMMmmm [NS] DDDMMmmm [EW] [AV] PPPPP GGGGG
+        const
+            dd = "([0-9]{2})",
+            ddd = "([0-9]{3})",
+            lm = line.match(new RegExp([
+                "^B",                       // type
+                `${dd}${dd}${dd}`,          // time
+                `${dd}${dd}${ddd}([NS])`,   // lat
+                `${ddd}${dd}${ddd}([EW])`,  // lon
+                "([AV])",                   // fix
+                "([0-9]{5}|-[0-9]{4})",     // pressure alt
+                "([0-9]{5}|-[0-9]{4})",     // alt
+            ].join(empty())));
+
+        if (lm) {
+            return {
+                time: DateTime.fromObject({
+                    hour: parseInt(lm[1], 10),
+                    minute: parseInt(lm[2], 10),
+                    second: parseInt(lm[3], 10),
+                }),
+                lat: {
+                    d: parseInt(lm[4], 10),
+                    m: parseInt(lm[5], 10),
+                    s: parseInt(lm[6], 10),
+                    o: lm[7],
+                },
+                lon: {
+                    d: parseInt(lm[8], 10),
+                    m: parseInt(lm[9], 10),
+                    s: parseInt(lm[10], 10),
+                    o: lm[11],
+                },
+                fix: lm[12],
+                palt: parseInt(lm[13], 10),
+                alt: parseInt(lm[14], 10),
+            };
+        } else
+            throw new Error(`IGCPosition::parse() - unrecognized: ${line}`);
+
+    }
+
+}
 
 
 
@@ -203,7 +214,7 @@ export const parsePosition = (line: string): Position => {
 export interface Track {
     name: string;
     date: IGCDate;
-    points: Position[];
+    points: IGCPosition[];
 }
 
 
@@ -229,7 +240,7 @@ export const parseFile = async (name: string): Promise<Track> => {
                 break;
 
             case IGCRecordType.Position:
-                points.push(parsePosition(line));
+                points.push(new IGCPosition(line));
                 break;
 
         }
