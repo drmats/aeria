@@ -87,7 +87,6 @@ let
     computeSummaryStats = async directory =>
         await map(
             async igcFilename => {
-                print(igcFilename)
                 let igc = await parseFile(igcFilename)
                 return {
                     name: igc.name,
@@ -213,8 +212,6 @@ let
                 // result
                 output = []
 
-            // ...
-            print()
 
             // compute average flight time
             aggregated = objectMap(
