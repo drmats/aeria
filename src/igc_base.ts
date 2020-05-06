@@ -59,8 +59,8 @@ export enum IGCRecordType {
  */
 export const classify = (line: string): IGCRecordType => {
 
-    if (line.match(/^HFDTE.*/)) return IGCRecordType.Date;
-    if (line.match(/^B.*/)) return IGCRecordType.Position;
+    if (line.startsWith("HFDTE")) return IGCRecordType.Date;
+    if (line.startsWith("B")) return IGCRecordType.Position;
     return IGCRecordType.Other;
 
 };
