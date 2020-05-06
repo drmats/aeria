@@ -23,6 +23,11 @@ module.exports = {
     target: "node",
 
 
+    resolve: {
+        extensions: [".ts", ".js"],
+    },
+
+
     entry: {
         "aeria": resolve(appDirectory, "src/index.js"),
     },

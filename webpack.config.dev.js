@@ -24,6 +24,11 @@ module.exports = {
     target: "node",
 
 
+    resolve: {
+        extensions: [".ts", ".js"],
+    },
+
+
     externals: [nodeExternals({
         whitelist: [
             /@babel\/runtime(\/.*)?/,
