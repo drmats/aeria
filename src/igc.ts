@@ -45,28 +45,64 @@ export const classify = (line: string): IGCRecordType => {
 
 
 /**
- * Parse IGC "HFDTE" record into Luxon's DateTime object.
+ * Base IGC record.
  */
-export const parseDate = (line: string): DateTime => {
+export interface IGCRecord {
+    type: IGCRecordType;
+    raw: string;
+}
 
-    // old date format ...
-    let lm = line.match(/^HFDTE([0-9]{2})([0-9]{2})([0-9]{2})$/);
 
-    // ... or a new date format
-    if (!isArray(lm)) {
-        lm = line.match(/^HFDTEDATE:([0-9]{2})([0-9]{2})([0-9]{2}),.*$/);
+
+
+/**
+ * IGC date.
+ */
+export class IGCDate implements IGCRecord {
+
+    // IGCRecord fields
+    type = IGCRecordType.Date;
+    raw: string;
+
+
+    // parsed value (luxon's DateTime object)
+    #parsed: undefined | DateTime;
+
+
+    // ...
+    constructor (raw: string) { this.raw = raw; }
+
+
+    // lazy getter (parse-on-demand)
+    get value (): DateTime {
+        if (!this.#parsed) { this.#parsed = IGCDate.parse(this.raw); }
+        return this.#parsed;
     }
 
-    if (lm) {
-        return DateTime.fromObject({
-            day: parseInt(lm[1], 10),
-            month: parseInt(lm[2], 10),
-            year: parseInt(`20${lm[3]}`, 10),
-        });
-    } else
-        throw new Error(`igc::parseDate() - unrecognized record: ${line}`);
 
-};
+    // Parse IGC "HFDTE" record into Luxon's DateTime object.
+    static parse (line: string): DateTime {
+
+        // old date format ...
+        let lm = line.match(/^HFDTE([0-9]{2})([0-9]{2})([0-9]{2})$/);
+
+        // ... or a new date format
+        if (!isArray(lm)) {
+            lm = line.match(/^HFDTEDATE:([0-9]{2})([0-9]{2})([0-9]{2}),.*$/);
+        }
+
+        if (lm) {
+            return DateTime.fromObject({
+                day: parseInt(lm[1], 10),
+                month: parseInt(lm[2], 10),
+                year: parseInt(`20${lm[3]}`, 10),
+            });
+        } else
+            throw new Error(`IGCDate::parse() - unrecognized record: ${line}`);
+
+    }
+
+}
 
 
 
@@ -155,7 +191,7 @@ export const parsePoint = (line: string): Position => {
  */
 export interface Track {
     name: string;
-    date: DateTime;
+    date: IGCDate;
     points: Position[];
 }
 
@@ -178,7 +214,7 @@ export const parseFile = async (name: string): Promise<Track> => {
         switch (classify(line)) {
 
             case IGCRecordType.Date:
-                date = parseDate(line);
+                date = new IGCDate(line);
                 break;
 
             case IGCRecordType.Position:

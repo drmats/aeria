@@ -70,7 +70,8 @@
                 "@typescript-eslint"
             ],
             "rules": {
-                "semi": ["error", "always"]
+                "semi": ["error", "always"],
+                "@typescript-eslint/interface-name-prefix": "off"
             }
         }
     ]
