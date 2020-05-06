@@ -14,10 +14,8 @@ import {
     head,
     last,
 } from "@xcmats/js-toolbox/array";
-import {
-    IGCPosition,
-    Track,
-} from "./igc";
+import { IGCPosition } from "./igc_position";
+import { Track } from "./igc";
 
 
 

@@ -29,11 +29,11 @@ import {
 import { toBool } from "@xcmats/js-toolbox/type"
 import { Duration } from "luxon"
 import { promises as fsp } from "fs"
-import { parseFile } from "./igc.ts"
+import { parseFile } from "./igc"
 import {
     calculateAllStats,
     calculateDuration,
-} from "./flight_stats.ts"
+} from "./flight_stats"
 
 
 
