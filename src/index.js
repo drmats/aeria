@@ -10,30 +10,30 @@
 
 
 
-import getopts from "getopts"
-import { map as asyncMap } from "@xcmats/js-toolbox/async"
+import getopts from "getopts";
+import { map as asyncMap } from "@xcmats/js-toolbox/async";
 import {
     choose,
     rearg,
-} from "@xcmats/js-toolbox/func"
+} from "@xcmats/js-toolbox/func";
 import {
     nl,
     padLeft,
     quote,
     space,
-} from "@xcmats/js-toolbox/string"
+} from "@xcmats/js-toolbox/string";
 import {
     objectMap,
     objectReduce,
-} from "@xcmats/js-toolbox/struct"
-import { toBool } from "@xcmats/js-toolbox/type"
-import { Duration } from "luxon"
-import { promises as fsp } from "fs"
-import { parseFile } from "./lib/igc"
+} from "@xcmats/js-toolbox/struct";
+import { toBool } from "@xcmats/js-toolbox/type";
+import { Duration } from "luxon";
+import { promises as fsp } from "fs";
+import { parseFile } from "./lib/igc";
 import {
     calculateAllStats,
     calculateDuration,
-} from "./lib/flight_stats"
+} from "./lib/flight_stats";
 
 
 
@@ -74,8 +74,8 @@ let
         (await fsp.readdir(directory, { withFileTypes: true }))
             .filter(entry =>
                 entry.isFile() && toBool(
-                    entry.name.toLowerCase().match(/\.igc$/)
-                )
+                    entry.name.toLowerCase().match(/\.igc$/),
+                ),
             )
             .map(file => file.name),
 
@@ -87,13 +87,13 @@ let
     computeSummaryStats = async directory =>
         await map(
             async igcFilename => {
-                let igc = await parseFile(igcFilename)
+                let igc = await parseFile(igcFilename);
                 return {
                     name: igc.name,
                     date: igc.date.val,
                     duration: calculateDuration(igc.points),
-                }
-            }
+                };
+            },
         ) (await getIgcFilenames(directory)),
 
 
@@ -122,7 +122,7 @@ let
                 csv: false,
                 file: null,
             },
-        })
+        });
 
 
         // print help if desired
@@ -133,8 +133,8 @@ let
                 "[-r|--raw] [--no-total]",
                 "[-c|--csv]",
                 "[-f|--file=FILE]",
-            ].join(space()))
-            return process.exit(0)
+            ].join(space()));
+            return process.exit(0);
         }
 
 
@@ -145,30 +145,30 @@ let
 
                 let
                     igc = await parseFile(options.file),
-                    stats = calculateAllStats(igc)
+                    stats = calculateAllStats(igc);
 
                 print(
                     pad("name:"),
-                    igc.name
-                )
+                    igc.name,
+                );
                 print(
                     pad("date:"),
-                    igc.date.val.toISODate()
-                )
+                    igc.date.val.toISODate(),
+                );
                 print(
                     pad("points:"),
-                    igc.points.length
-                )
+                    igc.points.length,
+                );
                 print(
                     pad("duration:"),
-                    secondsToHoursMinutes(stats.duration)
-                )
+                    secondsToHoursMinutes(stats.duration),
+                );
                 print(
                     pad("max alt. gain:"),
-                    stats.maxAltGain
-                )
+                    stats.maxAltGain,
+                );
 
-                return
+                return;
 
             }
 
@@ -195,22 +195,22 @@ let
                             ].join("-"),
                         },
                         // aggregate by year (default)
-                        () => String(flight.date.year)
-                    )
+                        () => String(flight.date.year),
+                    );
                     if (acc[bucket]) {
-                        acc[bucket].duration += flight.duration
-                        acc[bucket].flights += 1
+                        acc[bucket].duration += flight.duration;
+                        acc[bucket].flights += 1;
                     } else {
                         acc[bucket] = {
                             duration: flight.duration,
                             flights: 1,
-                        }
+                        };
                     }
-                    return acc
+                    return acc;
                 }, {}),
 
                 // result
-                output = []
+                output = [];
 
 
             // compute average flight time
@@ -218,8 +218,8 @@ let
                 aggregated, ([k, { duration, flights, ...rest }]) => [k, {
                     duration, flights, ...rest,
                     average: Math.floor(duration / flights),
-                }]
-            )
+                }],
+            );
 
             // compute totals
             if (options.total) {
@@ -229,11 +229,11 @@ let
                         duration: acc.duration + v.duration,
                         flights: acc.flights + v.flights,
                     }),
-                    { duration: 0, flights: 0 }
-                )
+                    { duration: 0, flights: 0 },
+                );
                 aggregated["TOTAL"].average = Math.floor(
-                    aggregated["TOTAL"].duration / aggregated["TOTAL"].flights
-                )
+                    aggregated["TOTAL"].duration / aggregated["TOTAL"].flights,
+                );
             }
 
             // form an output (array of objects)
@@ -244,14 +244,14 @@ let
                         duration: secondsToHoursMinutes(duration),
                         ...rest,
                         average: secondsToHoursMinutes(average),
-                    }]
+                    }],
                 ))
                 // { date, duration, flights, average, ...}
                 .map(([k, v]) => ({ date: k, ...v }))
                 // sort by date
                 .sort(({ date: d1 }, { date: d2 }) =>
-                    d1 < d2 ? -1 : d1 > d2 ? 1 : 0
-                )
+                    d1 < d2 ? -1 : d1 > d2 ? 1 : 0,
+                );
 
             // shout it to the stdout
             if (output.length > 0  &&  options.csv) {
@@ -263,24 +263,24 @@ let
                                 options.raw ? o.duration : quote(o.duration),
                                 o.flights,
                                 options.raw ? o.average : quote(o.average),
-                            ].join(","))
+                            ].join(",")),
                         )
-                        .join(nl())
-                )
+                        .join(nl()),
+                );
             } else {
-                print(output)
+                print(output);
             }
 
         // deal with (async) errors
         } catch (ex) {
-            print(ex)
-            process.exit(-1)
+            print(ex);
+            process.exit(-1);
         }
 
-    }
+    };
 
 
 
 
 // ...
-main()
+main();
