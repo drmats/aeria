@@ -1,5 +1,4 @@
 {
-
     "env": {
         "commonjs": true,
         "es6": true,
@@ -10,14 +9,7 @@
         "eslint:recommended"
     ],
 
-    "parser": "babel-eslint",
-    "parserOptions": {
-        "ecmaFeatures": {
-            "experimentalObjectRestSpread": true
-        },
-        "ecmaVersion": 2018,
-        "sourceType": "module"
-    },
+    "parser": "@babel/eslint-parser",
 
     "plugins": [
         "import"
@@ -30,10 +22,10 @@
             "error",
             {
                 "arrays": "always-multiline",
-                "objects": "always-multiline",
-                "imports": "ignore",
-                "exports": "ignore",
-                "functions": "ignore"
+                "exports": "always-multiline",
+                "functions": "always-multiline",
+                "imports": "always-multiline",
+                "objects": "always-multiline"
             }
         ],
         "indent": ["warn", 4, { "SwitchCase": 1 }],
@@ -47,8 +39,9 @@
         "no-unexpected-multiline": "error",
         "no-unused-vars": ["warn", {"args": "all", "argsIgnorePattern": "^_"}],
         "object-curly-newline": "off",
+        "object-curly-spacing": ["error", "always"],
         "quotes": ["error", "double"],
-        "semi": ["error", "never"],
+        "semi": ["error", "always"],
         "space-before-function-paren": ["error", "always"],
         "strict": "off",
 
@@ -70,10 +63,29 @@
                 "@typescript-eslint"
             ],
             "rules": {
-                "semi": ["error", "always"],
-                "@typescript-eslint/interface-name-prefix": "off"
+                 "@typescript-eslint/comma-dangle": [
+                    "error",
+                    {
+                        "arrays": "always-multiline",
+                        "enums": "always-multiline",
+                        "exports": "always-multiline",
+                        "functions": "always-multiline",
+                        "generics": "always-multiline",
+                        "imports": "always-multiline",
+                        "objects": "always-multiline",
+                        "tuples": "always-multiline"
+                    }
+                ],
+                "@typescript-eslint/indent": "off",
+                "@typescript-eslint/interface-name-prefix": "off",
+                "@typescript-eslint/no-unused-vars": ["warn", {"args": "all", "argsIgnorePattern": "^_"}],
+                "@typescript-eslint/semi": ["error", "always"],
+                "@typescript-eslint/no-non-null-assertion": "off",
+                "comma-dangle": "off",
+                "indent": ["warn", 4, { "SwitchCase": 1 }],
+                "prefer-const": "off",
+                "semi": "off"
             }
         }
     ]
-
 }

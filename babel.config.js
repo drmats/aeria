@@ -1,41 +1,49 @@
-"use strict"
+/**
+ * Transpilation configuration.
+ *
+ * @module @xcmats/babel-backend-config
+ * @license BSD-2-Clause
+ * @copyright Mat. 2019-present
+ */
+
+"use strict";
 
 
 
 
 // ...
-var conf = {
-    presets: [
-        [
-            "@babel/preset-env",
-            {
-                modules: "commonjs",
-                shippedProposals: true,
-                targets: {
-                    node: true,
+const
+
+    conf = {
+        presets: [
+            [
+                "@babel/preset-env",
+                {
+                    exclude: [
+                        "transform-async-to-generator",
+                        "transform-regenerator",
+                    ],
+                    modules: "commonjs",
+                    targets: {
+                        node: "14.0.0",
+                    },
+                    useBuiltIns: false,
                 },
-            },
+            ],
+            [
+                "@babel/preset-typescript",
+            ],
         ],
-        [
-            "@babel/preset-typescript",
-        ],
-    ],
-    plugins: [
-        "@babel/plugin-proposal-class-properties",
-        "@babel/plugin-transform-runtime",
-    ],
-    comments: false,
-    shouldPrintComment: () => false,
-}
+        comments: false,
+        shouldPrintComment: () => false,
+    };
 
 
 
 
 // configuration
 module.exports = function (api) {
-    api.cache.using(() => process.env.BABEL_ENV)
-    // eslint-disable-next-line no-console
-    console.log(`Compiling for '${api.env()}' ...`)
+    api.cache.using(() => process.env.BABEL_ENV);
 
     return {
 
@@ -49,5 +57,5 @@ module.exports = function (api) {
 
         },
 
-    }
-}
+    };
+};

@@ -1,15 +1,27 @@
-"use strict"
+/**
+ * Bundle configuration.
+ *
+ * @module @xcmats/webpack-backend-config
+ * @license BSD-2-Clause
+ * @copyright Mat. 2019-present
+ */
+
+"use strict";
 
 
 
 
 // ...
 const
+
+    webpack = require("webpack"),
     { realpathSync } = require("fs"),
     { resolve } = require("path"),
-    webpack = require("webpack"),
     MinifyPlugin = require("terser-webpack-plugin"),
-    appDirectory = realpathSync(process.cwd())
+    ESLintPlugin = require("eslint-webpack-plugin"),
+    nodeExternals = require("webpack-node-externals"),
+    appName = require("./package.json").name,
+    appDirectory = realpathSync(process.cwd());
 
 
 
@@ -28,8 +40,15 @@ module.exports = {
     },
 
 
+    externals: [nodeExternals({
+        allowlist: [
+            /@xcmats\/js-toolbox(\/.*)?/,
+        ],
+    })],
+
+
     entry: {
-        "aeria": resolve(appDirectory, "src/index.js"),
+        [appName.split("/")[1]]: resolve(appDirectory, "src/index.js"),
     },
 
 
@@ -56,7 +75,8 @@ module.exports = {
                 extractComments: false,
             }),
         ],
-        occurrenceOrder: true,
+        chunkIds: "total-size",
+        moduleIds: "size",
         providedExports: true,
         removeAvailableModules: true,
         removeEmptyChunks: true,
@@ -67,15 +87,9 @@ module.exports = {
     module: {
         rules: [
             {
-                enforce: "pre",
-                test: /\.(js|ts)$/,
-                exclude: /node_modules/,
-                loader: "eslint-loader",
-            },
-            {
                 test: /\.(js|ts)$/,
                 loader: "babel-loader",
-                sideEffects: true,
+                sideEffects: false,
             },
         ],
     },
@@ -91,6 +105,9 @@ module.exports = {
         new webpack.DefinePlugin({
             "process.env.BABEL_ENV": JSON.stringify("production"),
         }),
+        new ESLintPlugin({
+            context: "src",
+        }),
     ],
 
-}
+};
