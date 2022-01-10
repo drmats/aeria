@@ -12,7 +12,7 @@
     "dependencies": {
         "@xcmats/js-toolbox": "0.14.3",
         "getopts": "2.3.0",
-        "luxon": "1.27.0"
+        "luxon": "2.3.0"
     },
     "description": "Flightlog.",
     "devDependencies": {
@@ -20,7 +20,7 @@
         "@babel/eslint-parser": "7.16.5",
         "@babel/preset-env": "7.16.7",
         "@babel/preset-typescript": "7.16.7",
-        "@types/luxon": "1.26.5",
+        "@types/luxon": "2.0.9",
         "@types/node": "17.0.8",
         "@typescript-eslint/eslint-plugin": "5.9.0",
         "@typescript-eslint/parser": "5.9.0",
