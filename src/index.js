@@ -27,13 +27,47 @@ import {
     objectReduce,
 } from "@xcmats/js-toolbox/struct";
 import { toBool } from "@xcmats/js-toolbox/type";
-import { Duration } from "luxon";
+import { DateTime, Duration } from "luxon";
 import { promises as fsp } from "fs";
 import { parseFile } from "./lib/igc";
 import {
     calculateAllStats,
     calculateDuration,
 } from "./lib/flight_stats";
+
+
+
+
+// ...
+const rangeWithSpan = ({ low, high, span }) => {
+    const config = {
+        d: { unit: "days",   format: "yyyy-MM-dd" },
+        m: { unit: "months", format: "yyyy-MM" },
+        y: { unit: "years",  format: "yyyy" },
+    };
+
+    if (!config[span]) {
+        throw new Error(`Invalid span "${span}", expected "d", "m" or "y".`);
+    }
+
+    const { unit, format } = config[span];
+
+    let current = DateTime.fromFormat(low, format);
+    const end = DateTime.fromFormat(high, format);
+
+    if (!current.isValid || !end.isValid) {
+        throw new Error(`Invalid date format for span "${span}".`);
+    }
+
+    const result = [];
+
+    while (current <= end) {
+        result.push(current.toFormat(format));
+        current = current.plus({ [unit]: 1 });
+    }
+
+    return result;
+};
 
 
 
@@ -110,9 +144,10 @@ let
                 span: "s",
                 total: "t",
                 csv: "c",
+                gaps: "g",
                 file: "f",
             },
-            boolean: ["h", "r", "t", "c"],
+            boolean: ["h", "r", "t", "c", "g"],
             string: ["span", "file"],
             default: {
                 help: false,
@@ -120,6 +155,7 @@ let
                 raw: false,
                 total: true,
                 csv: false,
+                gaps: true,
                 file: null,
             },
         });
@@ -130,7 +166,7 @@ let
             print([
                 "usage:",
                 "aeria [-s|--span=y|m|d]",
-                "[-r|--raw] [--no-total]",
+                "[-r|--raw] [--no-total] [--no-gaps]",
                 "[-c|--csv]",
                 "[-f|--file=FILE]",
             ].join(space()));
@@ -252,6 +288,28 @@ let
                 .sort(({ date: d1 }, { date: d2 }) =>
                     d1 < d2 ? -1 : d1 > d2 ? 1 : 0,
                 );
+
+            // fill in gaps if desired
+            if (output.length > 0 && !options.gaps && !options.total) {
+                const fullRange = rangeWithSpan({
+                    low: output[0].date,
+                    high: output[output.length - 1].date,
+                    span: options.span,
+                });
+                let oi = 0;
+                output = fullRange.map((date) => {
+                    if (oi < output.length  &&  output[oi].date === date) {
+                        return output[oi++];
+                    } else {
+                        return {
+                            date,
+                            duration: options.raw ? 0 : "00:00",
+                            flights: 0,
+                            average: options.raw ? 0 : "00:00",
+                        };
+                    }
+                });
+            }
 
             // shout it to the stdout
             if (output.length > 0  &&  options.csv) {
